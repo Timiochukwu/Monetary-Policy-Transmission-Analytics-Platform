@@ -1,0 +1,21 @@
+# Monetary Policy Transmission Analytics Platform
+# Day 1 Dependencies - Data Acquisition & EDA
+
+# Core Data Manipulation
+pandas==2.1.4
+numpy==1.26.2
+
+# Data Visualization
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Excel/CSV handling
+openpyxl==3.1.2
+xlrd==2.0.1
+
+# Jupyter for exploratory analysis
+jupyter==1.0.0
+ipykernel==6.27.1
+
+# Note: Econometric libraries will be added in Week 2
+# statsmodels, arch, scipy will be installed when needed

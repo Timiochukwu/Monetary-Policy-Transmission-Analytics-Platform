@@ -1,0 +1,93 @@
+{
+  "project": "Monetary Policy Transmission Analytics Platform - Nigeria",
+  "data_period": {
+    "start": "2010-01",
+    "end": "2025-01",
+    "frequency": "monthly",
+    "observations_target": 180
+  },
+  "variables": {
+    "mpr": {
+      "name": "Monetary Policy Rate",
+      "unit": "percent per annum",
+      "source": "Central Bank of Nigeria (CBN)",
+      "source_url": "https://statistics.cbn.gov.ng/",
+      "description": "Official benchmark interest rate set by CBN Monetary Policy Committee",
+      "transformation": "none (already in percentage)",
+      "role": "Policy variable (exogenous in VAR ordering)",
+      "academic_reference": "CBN Communiqués of Monetary Policy Committee Meetings"
+    },
+    "inflation": {
+      "name": "Headline Consumer Price Index Inflation",
+      "unit": "year-on-year percentage change",
+      "source": "National Bureau of Statistics (NBS) / CBN",
+      "source_url": "https://nigerianstat.gov.ng/",
+      "description": "All-items CPI inflation rate (YoY growth)",
+      "transformation": "YoY percentage change from CPI index",
+      "role": "Target variable (most endogenous in VAR)",
+      "academic_reference": "NBS CPI Reports (monthly)"
+    },
+    "exchange_rate": {
+      "name": "Official Exchange Rate (Naira per USD)",
+      "unit": "NGN/USD",
+      "source": "Central Bank of Nigeria",
+      "source_url": "https://statistics.cbn.gov.ng/",
+      "description": "NAFEX (Investors & Exporters Window) rate - market-determined rate",
+      "transformation": "End-of-month or monthly average",
+      "role": "Transmission channel (responds to MPR via interest parity)",
+      "academic_reference": "CBN Statistical Bulletin, Exchange Rate Section",
+      "note": "Pre-2017 data uses interbank rate; post-2017 uses I&E window"
+    },
+    "money_supply": {
+      "name": "Broad Money Supply (M2)",
+      "unit": "Naira billions",
+      "source": "Central Bank of Nigeria",
+      "source_url": "https://statistics.cbn.gov.ng/",
+      "description": "M2 = Currency in Circulation + Demand Deposits + Savings & Time Deposits",
+      "transformation": "Log-level or growth rate",
+      "role": "Monetary aggregate (credit channel indicator)",
+      "academic_reference": "CBN Statistical Bulletin, Money & Credit Section"
+    }
+  },
+  "data_sources_priority": [
+    {
+      "rank": 1,
+      "source": "CBN Statistical Bulletin",
+      "url": "https://www.cbn.gov.ng/documents/Statbulletin.asp",
+      "coverage": "All variables, official government data",
+      "reliability": "Highest - used in academic publications"
+    },
+    {
+      "rank": 2,
+      "source": "CBN Statistics Database",
+      "url": "https://statistics.cbn.gov.ng/",
+      "coverage": "Interactive query system for all CBN data",
+      "reliability": "High - same source as bulletin, more up-to-date"
+    },
+    {
+      "rank": 3,
+      "source": "IMF International Financial Statistics",
+      "url": "https://data.imf.org/",
+      "coverage": "Cross-country validated data for Nigeria",
+      "reliability": "High - good for missing CBN data points"
+    },
+    {
+      "rank": 4,
+      "source": "FRED (Federal Reserve Bank of St. Louis)",
+      "url": "https://fred.stlouisfed.org/",
+      "coverage": "Limited Nigeria series (inflation, exchange rate)",
+      "reliability": "Medium-High - aggregated from official sources"
+    }
+  ],
+  "data_collection_notes": {
+    "missing_data_strategy": "Linear interpolation for isolated missing months; forward fill for end-of-sample",
+    "outlier_handling": "Flag values >3 SD from mean; investigate against CBN policy events",
+    "seasonal_adjustment": "Not applied - monthly data retains seasonal patterns for VAR",
+    "citation_format": "Central Bank of Nigeria (2024). Statistical Bulletin. Abuja: CBN."
+  },
+  "academic_justification": {
+    "sample_period": "2010-2025 covers multiple MPR cycles, naira devaluation episodes (2015-2016, 2020, 2023), and inflation surge periods, providing sufficient variation for identification.",
+    "variable_selection": "Four-variable VAR follows Sims (1980) parsimony principle while capturing key transmission channels: interest rate, exchange rate, and monetary aggregate effects on prices.",
+    "data_frequency": "Monthly frequency balances transmission lag dynamics (policy takes 3-12 months to affect inflation) with sufficient observations for estimation (T=180)."
+  }
+}

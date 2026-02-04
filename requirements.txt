@@ -17,5 +17,13 @@ xlrd==2.0.1
 jupyter==1.0.0
 ipykernel==6.27.1
 
-# Note: Econometric libraries will be added in Week 2
-# statsmodels, arch, scipy will be installed when needed
+# ==============================================
+# Day 3 Dependencies – Stationarity Testing
+# ==============================================
+# Why statsmodels?  Industry-standard econometric library.  adfuller(),
+#   kpss(), plot_acf/pacf are all built-in.  OLS with HAC covariance
+#   lets us implement Phillips-Perron without a separate package.
+# Why scipy?  Required internally by statsmodels for critical-value
+#   interpolation and hypothesis-test utilities.
+statsmodels>=0.14.1
+scipy==1.11.4

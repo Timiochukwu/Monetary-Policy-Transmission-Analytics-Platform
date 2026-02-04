@@ -1,0 +1,13 @@
+Variable,Test,Test_Statistic,P_Value,Stationary,CV_1%,CV_5%,CV_10%,CV_2.5%
+MPR,ADF,-1.1495,0.9203,False,-4.011,-3.436,-3.142,
+MPR,PP,0.483,0.4,False,-3.428,-2.862,-2.572,
+MPR,KPSS,0.1862,0.0212,False,0.216,0.146,0.119,0.176
+ExchangeRate,ADF,0.1616,0.9955,False,-4.01,-3.435,-3.142,
+ExchangeRate,PP,1.8355,0.4,False,-3.428,-2.862,-2.572,
+ExchangeRate,KPSS,0.304,0.01,False,0.216,0.146,0.119,0.176
+M2,ADF,-4.1012,0.0063,True,-4.012,-3.436,-3.142,
+M2,PP,149.1782,0.4,False,-3.428,-2.862,-2.572,
+M2,KPSS,0.4551,0.01,False,0.216,0.146,0.119,0.176
+Inflation,ADF,-3.5359,0.0357,True,-4.012,-3.436,-3.142,
+Inflation,PP,-0.9454,0.4,False,-3.428,-2.862,-2.572,
+Inflation,KPSS,0.2733,0.01,False,0.216,0.146,0.119,0.176

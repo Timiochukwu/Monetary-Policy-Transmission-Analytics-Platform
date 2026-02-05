@@ -1,0 +1,5 @@
+r,Eigenvalue,Trace_Statistic,Trace_CV_5pct,Trace_Reject,MaxEig_Statistic,MaxEig_CV_5pct,MaxEig_Reject
+0,0.173103,62.879,47.855,True,31.933,27.586,True
+1,0.086388,30.947,29.796,True,15.179,21.131,False
+2,0.064284,15.768,15.494,True,11.162,14.264,False
+3,0.027042,4.606,3.841,True,4.606,3.841,True

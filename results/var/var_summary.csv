@@ -1,0 +1,2 @@
+n_obs,optimal_lag,n_variables,ordering
+181,11,4,MPR → ExchangeRate → M2 → Inflation

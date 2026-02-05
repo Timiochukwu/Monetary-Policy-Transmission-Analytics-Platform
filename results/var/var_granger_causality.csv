@@ -1,0 +1,13 @@
+causing,caused,F_statistic,p_value,significant
+ExchangeRate,MPR,7.0865,0.0,True
+M2,MPR,2.127,0.0173,True
+Inflation,MPR,1.605,0.0938,False
+MPR,ExchangeRate,1.3551,0.1909,False
+M2,ExchangeRate,2.2348,0.0119,True
+Inflation,ExchangeRate,1.3567,0.1901,False
+MPR,M2,1.0808,0.3747,False
+ExchangeRate,M2,0.9228,0.5179,False
+Inflation,M2,1.3764,0.1802,False
+MPR,Inflation,1.3754,0.1807,False
+ExchangeRate,Inflation,1.4963,0.129,False
+M2,Inflation,0.7183,0.7214,False

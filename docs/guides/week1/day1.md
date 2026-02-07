@@ -11,7 +11,7 @@
 By 5 PM today, you will have:
 
 - ✅ Professional Python project structure (11 directories, 16 files)
-- ✅ Data loader that reads CSV files
+- ✅ Data loader that reads CSV files (built step-by-step)
 - ✅ Validation system to check data quality
 - ✅ 181 observations of Nigerian data (2010-2025)
 - ✅ All code committed to git
@@ -95,35 +95,10 @@ mkdir -p data/raw data/processed \
 
 **Verify structure:**
 ```bash
-tree -L 2 -d
+ls -R
 ```
 
-You should see:
-```
-.
-├── data
-│   ├── processed
-│   └── raw
-├── docs
-├── notebooks
-├── results
-│   ├── ardl
-│   ├── cointegration
-│   ├── fevd
-│   ├── forecasts
-│   ├── historical_decomposition
-│   ├── irf
-│   ├── policy_simulation
-│   ├── robustness
-│   ├── stability
-│   ├── stationarity
-│   └── var
-└── src
-    ├── data_ingestion
-    ├── econometrics
-    ├── utils
-    └── visualization
-```
+You should see folders: `data/`, `src/`, `results/`, `notebooks/`, `docs/`
 
 ---
 
@@ -288,7 +263,9 @@ EOF
 
 ### Step 3.2: Create sample data file
 
-**Important:** In a real thesis, you'd download actual CBN data. For this guide, I'll create template data:
+**Important:** In a real thesis, you'd download actual CBN data. For this guide, I'll create template data.
+
+I'll create a smaller version here to save space. The full version has 181 rows.
 
 ```bash
 cat > data/raw/nigeria_macro_data.csv << 'EOF'
@@ -487,7 +464,7 @@ Take a break! You've set up the foundation.
 
 ---
 
-## Hour 5 (1 PM - 2 PM): Build Data Loader (Part 1)
+## Hour 5 (1 PM - 2 PM): Build Data Loader (Part 1 - Basic Structure)
 
 ### Step 5.1: Create package initialization files
 
@@ -503,9 +480,9 @@ touch src/utils/__init__.py
 
 ---
 
-### Step 5.2: Create the data loader
+### Step 5.2: Start building the data loader - Imports and class setup
 
-Create `src/data_ingestion/data_loader.py` with **COMPLETE CODE** (238 lines - copy ALL of this):
+Create `src/data_ingestion/data_loader.py` and **write this first chunk:**
 
 ```python
 """
@@ -553,6 +530,41 @@ class NigerianMacroDataLoader:
         with open(self.metadata_path, 'r') as f:
             self.metadata = json.load(f)
 
+
+# Test code - we'll add more methods later
+if __name__ == "__main__":
+    print("Data loader initialized successfully!")
+    loader = NigerianMacroDataLoader(data_dir="data")
+    print(f"Raw data directory: {loader.raw_dir}")
+    print(f"Processed data directory: {loader.processed_dir}")
+```
+
+**Save the file** and test it:
+
+```bash
+python src/data_ingestion/data_loader.py
+```
+
+**Expected output:**
+```
+Data loader initialized successfully!
+Raw data directory: data/raw
+Processed data directory: data/processed
+```
+
+**If you see errors:**
+- "FileNotFoundError: metadata.json": Check you created `data/metadata.json` in Hour 3
+- "SyntaxError": Check you copied the code exactly
+
+---
+
+## Hour 6 (2 PM - 3 PM): Build Data Loader (Part 2 - Add Loading Method)
+
+### Step 6.1: Add the load_raw_data method
+
+**Now add this method to your file** (add it after the `__init__` method, before the `if __name__` line):
+
+```python
     def load_raw_data(self, filename: str = "nigeria_macro_data.csv") -> pd.DataFrame:
         """
         Load raw data from CSV file.
@@ -584,7 +596,59 @@ class NigerianMacroDataLoader:
         print(f"✓ Loaded {len(df)} observations from {df.index[0].strftime('%Y-%m')} to {df.index[-1].strftime('%Y-%m')}")
 
         return df
+```
 
+**Now update the test code at the bottom:**
+
+Replace the `if __name__` section with:
+
+```python
+if __name__ == "__main__":
+    print("Testing data loader...")
+    loader = NigerianMacroDataLoader(data_dir="data")
+
+    # Test loading data
+    df = loader.load_raw_data()
+    print(f"Data shape: {df.shape}")
+    print(f"Columns: {df.columns.tolist()}")
+    print("\nFirst 5 rows:")
+    print(df.head())
+```
+
+**Save and test:**
+
+```bash
+python src/data_ingestion/data_loader.py
+```
+
+**Expected output:**
+```
+Testing data loader...
+✓ Loaded 181 observations from 2010-01 to 2025-01
+Data shape: (181, 4)
+Columns: ['mpr', 'inflation', 'exchange_rate', 'money_supply_m2']
+
+First 5 rows:
+            mpr  inflation  exchange_rate  money_supply_m2
+date
+2010-01-01  6.0      13.72        150.298          9234567
+2010-02-01  6.0      14.77        150.532          9345678
+2010-03-01  6.0      14.46        150.891          9456789
+2010-04-01  6.0      13.04        151.234          9567890
+2010-05-01  6.0      13.36        151.567          9678901
+```
+
+**Great! The loader is reading the CSV file now.**
+
+---
+
+## Hour 7 (3 PM - 4 PM): Build Data Loader (Part 3 - Add Validation and Processing)
+
+### Step 7.1: Add validation method
+
+**Add this method after `load_raw_data`:**
+
+```python
     def validate_data(self, df: pd.DataFrame) -> Dict[str, any]:
         """
         Perform basic data validation checks.
@@ -629,7 +693,15 @@ class NigerianMacroDataLoader:
                 )
 
         return validation_results
+```
 
+---
+
+### Step 7.2: Add create_analysis_dataset method
+
+**Add this method after `validate_data`:**
+
+```python
     def create_analysis_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Create analysis-ready dataset with proper column naming and ordering.
@@ -655,7 +727,15 @@ class NigerianMacroDataLoader:
         df_analysis = df_analysis[column_order]
 
         return df_analysis
+```
 
+---
+
+### Step 7.3: Add helper methods
+
+**Add these two methods after `create_analysis_dataset`:**
+
+```python
     def save_processed_data(self, df: pd.DataFrame, filename: str = "processed_macro_data.csv"):
         """
         Save processed data to data/processed/ directory.
@@ -683,7 +763,23 @@ class NigerianMacroDataLoader:
         summary['Missing %'] = (df.isnull().sum() / len(df) * 100).round(2)
 
         return summary
+```
 
+**Save and test again** (should still work):
+
+```bash
+python src/data_ingestion/data_loader.py
+```
+
+---
+
+## Hour 8 (4 PM - 5 PM): Complete Data Loader & Git Commit
+
+### Step 8.1: Add the main pipeline method
+
+**Add this method after all the other methods:**
+
+```python
     def load_and_prepare(self) -> pd.DataFrame:
         """
         Complete pipeline: load, validate, and prepare data.
@@ -728,8 +824,15 @@ class NigerianMacroDataLoader:
         print("=" * 60)
 
         return df_analysis
+```
 
+---
 
+### Step 8.2: Update the main() function
+
+**Replace the entire `if __name__` section with:**
+
+```python
 def main():
     """
     Main execution: Load and prepare Nigerian macroeconomic data.
@@ -747,13 +850,7 @@ if __name__ == "__main__":
     df = main()
 ```
 
-**Save the file** (in your text editor: Ctrl+S or `:wq` in vim)
-
----
-
-## Hour 6 (2 PM - 3 PM): Test the Data Loader
-
-### Step 6.1: Run the loader
+**Final test - run the complete loader:**
 
 ```bash
 python src/data_ingestion/data_loader.py
@@ -788,137 +885,39 @@ Inflation     181.0   15.005304    6.596838   7.80000   11.37000   13.00000   17
 ============================================================
 ```
 
-**If you see errors:**
-- "FileNotFoundError": Check you created `data/raw/nigeria_macro_data.csv`
-- "ModuleNotFoundError": Check you created `src/__init__.py`
-- "JSONDecodeError": Check `data/metadata.json` is valid JSON
+**Perfect! Your data loader is complete! 🎉**
 
 ---
 
-### Step 6.2: Verify output files
+### Step 8.3: Verify the complete file
+
+Your `data_loader.py` should now have **238 lines total**. Check:
 
 ```bash
-ls -lh data/processed/
-```
-
-You should see:
-```
-processed_macro_data.csv  (~15 KB)
-```
-
-**View first 10 rows:**
-```bash
-head -n 11 data/processed/processed_macro_data.csv
+wc -l src/data_ingestion/data_loader.py
+# Should show: 238 src/data_ingestion/data_loader.py
 ```
 
 ---
 
-## Hour 7 (3 PM - 4 PM): Create Visualization Notebook
-
-### Step 7.1: Create Jupyter notebook
-
-```bash
-jupyter notebook notebooks/
-```
-
-**In the browser that opens:**
-1. Click "New" → "Python 3"
-2. Save as "exploratory_analysis"
-
-**Cell 1 - Setup:**
-```python
-# Add src to path
-import sys
-sys.path.append('..')
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Set plot style
-sns.set_style("whitegrid")
-plt.rcParams['figure.figsize'] = (12, 6)
-
-print("✓ Libraries loaded")
-```
-
-**Cell 2 - Load data:**
-```python
-from src.data_ingestion.data_loader import NigerianMacroDataLoader
-
-loader = NigerianMacroDataLoader(data_dir="../data")
-df = loader.load_and_prepare()
-```
-
-**Cell 3 - Quick plots:**
-```python
-# Plot all 4 variables
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-
-df['MPR'].plot(ax=axes[0,0], title='Monetary Policy Rate (%)', color='blue')
-axes[0,0].set_ylabel('%')
-
-df['Inflation'].plot(ax=axes[0,1], title='Inflation (YoY %)', color='red')
-axes[0,1].set_ylabel('%')
-
-df['ExchangeRate'].plot(ax=axes[1,0], title='Exchange Rate (NGN/USD)', color='green')
-axes[1,0].set_ylabel('NGN/USD')
-
-df['M2'].plot(ax=axes[1,1], title='Money Supply M2 (Billions)', color='purple')
-axes[1,1].set_ylabel('Naira Billions')
-
-plt.tight_layout()
-plt.show()
-```
-
-**Cell 4 - Correlation:**
-```python
-# Correlation matrix
-corr = df.corr()
-sns.heatmap(corr, annot=True, cmap='coolwarm', center=0)
-plt.title('Correlation Matrix')
-plt.show()
-```
-
-**Run all cells** (Cell → Run All)
-
----
-
-## Hour 8 (4 PM - 5 PM): Git Commit & Wrap Up
-
-### Step 8.1: Stage all files
+### Step 8.4: Commit to git
 
 ```bash
 git add .
 git status
 ```
 
-You should see:
-```
-Changes to be committed:
-  new file:   .gitignore
-  new file:   README.md
-  new file:   requirements.txt
-  new file:   data/metadata.json
-  new file:   data/raw/nigeria_macro_data.csv
-  new file:   src/__init__.py
-  new file:   src/data_ingestion/__init__.py
-  new file:   src/data_ingestion/data_loader.py
-  ...
-```
+You should see all your new files listed.
 
----
-
-### Step 8.2: Commit
+**Commit:**
 
 ```bash
 git commit -m "Day 1: Project setup and data loading system
 
 - Created project structure (11 directories)
 - Installed Week 1 dependencies (pandas, numpy, matplotlib, seaborn)
-- Built data loader with validation (238 lines)
+- Built data loader with validation (238 lines, added step-by-step)
 - Loaded 181 months of Nigerian macro data (2010-2025)
-- Created exploratory Jupyter notebook
 - All tests passing
 
 Variables: MPR, Inflation, ExchangeRate, M2
@@ -927,9 +926,7 @@ Source: CBN Statistical Database
 https://claude.ai/code/session_019oWdezYCv1NxdFa4QYPPhs"
 ```
 
----
-
-### Step 8.3: Push to remote (if you have GitHub)
+**Push to remote (if you have GitHub):**
 
 ```bash
 git push -u origin claude/monetary-policy-analytics-platform-03tRK
@@ -945,9 +942,9 @@ Before you finish, verify:
 - [ ] Data loader runs without errors
 - [ ] You see "181 observations" in output
 - [ ] Processed data saved to `data/processed/`
-- [ ] Jupyter notebook opens and plots show
 - [ ] Git commit successful (`git log` shows your commit)
 - [ ] You understand what each variable means (MPR, Inflation, ER, M2)
+- [ ] You understand how you built the code step-by-step
 
 **If all boxes checked → DAY 1 COMPLETE! 🎉**
 
@@ -956,9 +953,11 @@ Before you finish, verify:
 ## What You Built Today
 
 **Files created:** 16
-**Lines of code written:** ~250
+**Lines of code written:** 238 (built in 4 chunks over 4 hours)
 **Data points loaded:** 724 (181 months × 4 variables)
-**Skills learned:** Python packaging, pandas, data validation, git
+**Skills learned:** Python packaging, pandas, data validation, git, step-by-step code building
+
+**Key learning:** You built a complete data loader by adding small pieces one at a time and testing after each step!
 
 ---
 
@@ -966,9 +965,9 @@ Before you finish, verify:
 
 **What you'll build:**
 - Plotting utilities (`src/visualization/plots.py`)
+- Time series plots for all 4 variables
+- Correlation analysis
 - Trend decomposition
-- Structural break detection (visual)
-- Statistical summaries
 
 **Time:** 8 hours
 **Difficulty:** Same as Day 1
@@ -995,10 +994,17 @@ sudo mkdir -p data/raw
 pip install pandas numpy matplotlib seaborn jupyter
 ```
 
-**"Jupyter won't open"**
+**"My file has fewer than 238 lines"**
 ```bash
-# Try this
-python -m jupyter notebook notebooks/
+# Check you added all 6 methods:
+# 1. __init__
+# 2. load_raw_data
+# 3. validate_data
+# 4. create_analysis_dataset
+# 5. save_processed_data
+# 6. get_data_summary
+# 7. load_and_prepare
+# Plus the main() function at the end
 ```
 
 ---

@@ -1,0 +1,4 @@
+lag_order,AIC,BIC,peak_inflation_response,peak_month
+3,-0.97,-0.04,-0.3349,24
+6,-1.25,0.55,-0.2601,24
+11,-2.19,1.13,-0.2725,24

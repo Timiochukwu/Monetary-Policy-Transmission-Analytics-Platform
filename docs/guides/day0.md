@@ -99,6 +99,7 @@ mkdir -p results/fevd
 mkdir -p results/simulations
 mkdir -p results/historical_decomp
 mkdir -p results/svar
+mkdir -p results/vecm
 mkdir -p results/robustness
 mkdir -p notebooks
 mkdir -p docs/guides

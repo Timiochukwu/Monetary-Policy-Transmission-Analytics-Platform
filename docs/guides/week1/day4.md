@@ -10,7 +10,7 @@
 
 By 5 PM today, you will have:
 
-- ✅ Cointegration testing module (`src/econometrics/cointegration.py` - 280 lines)
+- ✅ Cointegration testing module (`models/cointegration.py` - 280 lines)
 - ✅ Engle-Granger pairwise tests (all combinations)
 - ✅ Johansen multivariate test
 - ✅ Cointegration rank determination
@@ -44,7 +44,7 @@ By 5 PM today, you will have:
 
 ### Step 1.2: Create cointegration module - Basic structure
 
-Create `src/econometrics/cointegration.py` and **write this first chunk:**
+Create `models/cointegration.py` and **write this first chunk:**
 
 ```python
 """
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/cointegration.py
+python models/cointegration.py
 ```
 
 **Expected output:**
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -195,7 +195,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/cointegration.py
+python models/cointegration.py
 ```
 
 ---
@@ -255,7 +255,7 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -279,7 +279,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/cointegration.py
+python models/cointegration.py
 ```
 
 **Expected output:**
@@ -383,7 +383,7 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -411,7 +411,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/cointegration.py
+python models/cointegration.py
 ```
 
 ---
@@ -581,7 +581,7 @@ def main():
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     print("\nLoading data...")
     loader = NigerianMacroDataLoader()
@@ -604,7 +604,7 @@ if __name__ == "__main__":
 **Save and run final test:**
 
 ```bash
-python src/econometrics/cointegration.py
+python models/cointegration.py
 ```
 
 ---
@@ -614,7 +614,7 @@ python src/econometrics/cointegration.py
 ### Step 8.1: Verify file completeness
 
 ```bash
-wc -l src/econometrics/cointegration.py
+wc -l models/cointegration.py
 # Should show: ~280 lines
 ```
 
@@ -673,6 +673,45 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ---
 
+## Final Code Summary
+
+Here's the complete `models/cointegration.py` file (~280 lines):
+
+**File**: `models/cointegration.py`
+
+**Structure**:
+```python
+class CointegrationTester:
+    def __init__(save_dir="results/cointegration")
+    def engle_granger_test(y, x, var_names)
+    def test_all_pairs(df, i1_variables)
+    def johansen_test(df, variables)
+    def print_johansen_results(results)
+    def save_results(eg_results, johansen_results)
+    def run_full_analysis(df, i1_variables)
+
+def main()
+```
+
+**Key capabilities**:
+- Engle-Granger pairwise cointegration test
+- Test all I(1) variable pairs automatically
+- Johansen multivariate cointegration test
+- Cointegration rank determination
+- Save results to CSV for thesis tables
+
+**Verify your file is complete:**
+```bash
+python -c "
+from models.cointegration import CointegrationTester
+import inspect
+methods = [m for m in dir(CointegrationTester) if not m.startswith('_')]
+print('Methods:', methods)
+"
+```
+
+---
+
 ## End of Day 4 Checklist ✅
 
 Before you finish, verify:
@@ -702,7 +741,7 @@ Before you finish, verify:
 ## Tomorrow (Day 5): ARDL Bounds Testing
 
 **What you'll build:**
-- ARDL bounds testing module (`src/econometrics/ardl.py`)
+- ARDL bounds testing module (`models/ardl.py`)
 - Pesaran et al. (2001) approach for mixed I(0)/I(1)
 - Long-run equilibrium estimation
 - Alternative to Johansen for mixed orders

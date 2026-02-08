@@ -11,7 +11,7 @@
 By 5 PM today, you will have:
 
 - ✅ New packages installed (statsmodels, scipy)
-- ✅ Stationarity testing module (`src/econometrics/stationarity.py` - 250 lines)
+- ✅ Stationarity testing module (`models/stationarity.py` - 250 lines)
 - ✅ ADF, PP, KPSS tests implemented
 - ✅ Integration order classification (I(0) vs I(1))
 - ✅ Results saved to `results/stationarity/`
@@ -71,7 +71,7 @@ scipy 1.11.4
 
 ### Step 1.3: Create stationarity module - Basic structure
 
-Create `src/econometrics/stationarity.py` and **write this first chunk:**
+Create `models/stationarity.py` and **write this first chunk:**
 
 ```python
 """
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/stationarity.py
+python models/stationarity.py
 ```
 
 **Expected output:**
@@ -188,7 +188,7 @@ if __name__ == "__main__":
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -211,7 +211,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/stationarity.py
+python models/stationarity.py
 ```
 
 **Expected output:**
@@ -330,7 +330,7 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -355,7 +355,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/stationarity.py
+python models/stationarity.py
 ```
 
 ---
@@ -470,7 +470,7 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -495,7 +495,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/econometrics/stationarity.py
+python models/stationarity.py
 ```
 
 **Expected output:**
@@ -636,7 +636,7 @@ def main():
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     print("\nLoading data...")
     loader = NigerianMacroDataLoader()
@@ -656,7 +656,7 @@ if __name__ == "__main__":
 **Save and run final test:**
 
 ```bash
-python src/econometrics/stationarity.py
+python models/stationarity.py
 ```
 
 **Expected output:**
@@ -706,7 +706,7 @@ ls -lh results/stationarity/
 ### Step 8.1: Verify file completeness
 
 ```bash
-wc -l src/econometrics/stationarity.py
+wc -l models/stationarity.py
 # Should show: ~250 lines
 ```
 
@@ -768,6 +768,48 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ---
 
+## Final Code Summary
+
+Here's the complete `models/stationarity.py` file (~250 lines):
+
+**File**: `models/stationarity.py`
+
+**Structure**:
+```python
+class StationarityTester:
+    def __init__(save_dir="results/stationarity")
+    def adf_test(series, variable_name)
+    def pp_test(series, variable_name)
+    def kpss_test(series, variable_name)
+    def test_all_variables(df)
+    def determine_integration_order(results_df)
+    def save_results(results_df, integration_df)
+    def print_summary(integration_df)
+    def run_full_analysis(df)
+
+def main()
+```
+
+**Key capabilities**:
+- Augmented Dickey-Fuller (ADF) unit root test
+- Phillips-Perron (PP) unit root test
+- KPSS stationarity test
+- Test all 4 variables automatically
+- Consensus integration order (I(0) vs I(1))
+- Save results tables to CSV
+
+**Verify your file is complete:**
+```bash
+python -c "
+from models.stationarity import StationarityTester
+import inspect
+methods = [m for m in dir(StationarityTester) if not m.startswith('_')]
+print('Methods:', methods)
+"
+```
+
+---
+
 ## End of Day 3 Checklist ✅
 
 Before you finish, verify:
@@ -798,7 +840,7 @@ Before you finish, verify:
 ## Tomorrow (Day 4): Cointegration Testing
 
 **What you'll build:**
-- Cointegration testing module (`src/econometrics/cointegration.py`)
+- Cointegration testing module (`models/cointegration.py`)
 - Engle-Granger two-step test
 - Johansen multivariate test
 - Cointegration rank determination

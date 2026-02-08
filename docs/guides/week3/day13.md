@@ -426,17 +426,53 @@ Add IRF plotting to VAR Analysis page:
 
 ---
 
-## Final Code Structure
+## Final Code Summary
 
-**File**: `dashboard/app.py` (~400 lines)
+Here's the complete `dashboard/app.py` file (~400 lines):
+
+**File**: `dashboard/app.py`
+
+**Structure** (Streamlit app - no class, just page sections):
+```python
+# Imports: streamlit, pandas, plotly, sys, pathlib
+# Page config: set_page_config(layout="wide")
+# Title and navigation sidebar
+# Page: "Home" - welcome screen
+# Page: "Data Upload" - file upload + validation
+# Page: "VAR Analysis" - lag selection, model fit
+#   - Section: IRF visualization (interactive Plotly)
+#   - Section: FEVD visualization (interactive Plotly)
+# Page: "Robustness" - stability checks
+# Page: "About" - project info
+```
 
 **Key features**:
 - Data upload with validation
 - Interactive VAR estimation
 - IRF/FEVD visualization with Plotly
-- Parameter selection widgets
-- Export results
-- Responsive design
+- Parameter selection widgets (sliders, dropdowns)
+- Export results to CSV
+- Responsive wide layout
+
+**Run it:**
+```bash
+cd dashboard
+streamlit run app.py
+# Opens at http://localhost:8501
+```
+
+**Verify your file has all pages:**
+```bash
+python -c "
+import ast
+with open('dashboard/app.py') as f:
+    content = f.read()
+pages = ['Home', 'Data Upload', 'VAR Analysis', 'Robustness', 'About']
+for p in pages:
+    status = '✓' if p in content else '✗ MISSING'
+    print(f'{status}: {p}')
+"
+```
 
 ---
 

@@ -423,6 +423,49 @@ python scripts/generate_report.py --data data/nigerian_macro_data.csv --output r
 
 ---
 
+## Final Code Summary
+
+Here's the complete `scripts/generate_report.py` file (~350 lines):
+
+**File**: `scripts/generate_report.py`
+
+**Structure**:
+```python
+class ReportGenerator:
+    def __init__(output_dir="results/reports", title, author)
+    def start_report()
+    def add_section(title, content)
+    def add_subsection(title, content)
+    def add_table(df, caption)
+    def add_figure(fig_path, caption, width)
+    def generate_executive_summary(var_results, data)
+    def generate()
+
+def generate_full_report(data_path, output_dir)
+```
+
+**Key capabilities**:
+- PDF generation with ReportLab
+- Title page creation
+- Section and subsection headings
+- Formatted data tables (with grey header)
+- Embedded figures/charts
+- Executive summary auto-generation
+- Full pipeline from data to PDF
+
+**Verify your file is complete:**
+```bash
+python -c "
+from scripts.generate_report import ReportGenerator
+import inspect
+methods = [m for m in dir(ReportGenerator) if not m.startswith('_')]
+print('Methods:', methods)
+print('Expected: add_figure, add_section, add_subsection, add_table, generate, generate_executive_summary, start_report')
+"
+```
+
+---
+
 ## What You Learned Today
 
 1. **Report Automation Concepts**:

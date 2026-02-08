@@ -10,7 +10,7 @@
 
 By 5 PM today, you will have:
 
-- ✅ Visualization utilities (`src/visualization/plots.py` - 180 lines)
+- ✅ Visualization utilities (`models/plots.py` - 180 lines)
 - ✅ Time series plots for all 4 variables
 - ✅ Correlation heatmap
 - ✅ Statistical summaries and trend analysis
@@ -26,7 +26,7 @@ By 5 PM today, you will have:
 
 ```bash
 cd ~/Monetary-Policy-Transmission-Analytics-Platform
-python src/data_ingestion/data_loader.py
+python models/data_loader.py
 ```
 
 **Expected output:** Should load 181 observations successfully.
@@ -37,7 +37,7 @@ python src/data_ingestion/data_loader.py
 
 ### Step 1.2: Create visualization module - Basic structure
 
-Create `src/visualization/plots.py` and **write this first chunk:**
+Create `models/plots.py` and **write this first chunk:**
 
 ```python
 """
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/visualization/plots.py
+python models/plots.py
 ```
 
 **Expected output:**
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     # Load data using Day 1's loader
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/visualization/plots.py
+python models/plots.py
 ```
 
 **Expected output:**
@@ -257,7 +257,7 @@ if __name__ == "__main__":
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -281,7 +281,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/visualization/plots.py
+python models/plots.py
 ```
 
 **Verify plots:**
@@ -340,7 +340,7 @@ if __name__ == "__main__":
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -365,7 +365,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/visualization/plots.py
+python models/plots.py
 ```
 
 ---
@@ -440,7 +440,7 @@ if __name__ == "__main__":
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -465,7 +465,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/visualization/plots.py
+python models/plots.py
 ```
 
 ---
@@ -537,7 +537,7 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
@@ -565,7 +565,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/visualization/plots.py
+python models/plots.py
 ```
 
 **You should now see the Exchange Rate plot with vertical lines marking 2016, 2020, 2023!**
@@ -637,7 +637,7 @@ def main():
     # Load data
     import sys
     sys.path.append('.')
-    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+    from models.data_loader import NigerianMacroDataLoader
 
     print("\nLoading data...")
     loader = NigerianMacroDataLoader()
@@ -657,7 +657,7 @@ if __name__ == "__main__":
 **Save and run:**
 
 ```bash
-python src/visualization/plots.py
+python models/plots.py
 ```
 
 **Expected output:**
@@ -713,8 +713,8 @@ jupyter notebook notebooks/
 import sys
 sys.path.append('..')
 
-from src.data_ingestion.data_loader import NigerianMacroDataLoader
-from src.visualization.plots import TimeSeriesPlotter
+from models.data_loader import NigerianMacroDataLoader
+from models.plots import TimeSeriesPlotter
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -777,8 +777,8 @@ print(f"  • M2 vs Inflation correlation: {corr.loc['M2', 'Inflation']:.3f}")
 Check your `plots.py` has ~180 lines:
 
 ```bash
-wc -l src/visualization/plots.py
-# Should show: ~180 src/visualization/plots.py
+wc -l models/plots.py
+# Should show: ~180 models/plots.py
 ```
 
 ---
@@ -819,6 +819,47 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ---
 
+## Final Code Summary
+
+Here's the complete `models/plots.py` file (~180 lines):
+
+**File**: `models/plots.py`
+
+**Structure**:
+```python
+class TimeSeriesPlotter:
+    def __init__(save_dir="results/plots")
+    def plot_single_series(df, column, title, save, filename)
+    def plot_all_variables(df, save_name)
+    def plot_correlation_heatmap(df, save, filename)
+    def generate_summary_stats(df)
+    def print_summary_stats(df)
+    def plot_with_events(df, column, events, title, save, filename)
+    def create_full_report(df)
+
+def main()
+```
+
+**Key capabilities**:
+- Plot individual time series with customization
+- Create 4-panel plot of all variables
+- Correlation heatmap with annotations
+- Summary statistics generation
+- Event annotation (CBN rate changes)
+- Full automated report generation
+
+**Verify your file is complete:**
+```bash
+python -c "
+from models.plots import TimeSeriesPlotter
+import inspect
+methods = [m for m in dir(TimeSeriesPlotter) if not m.startswith('_')]
+print('Methods:', methods)
+"
+```
+
+---
+
 ## End of Day 2 Checklist ✅
 
 Before you finish, verify:
@@ -853,7 +894,7 @@ Before you finish, verify:
 ## Tomorrow (Day 3): Stationarity Testing
 
 **What you'll build:**
-- Stationarity tests module (`src/econometrics/stationarity.py`)
+- Stationarity tests module (`models/stationarity.py`)
 - ADF, PP, KPSS tests
 - Integration order classification (I(0) vs I(1))
 

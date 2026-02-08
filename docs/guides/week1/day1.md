@@ -1,8 +1,14 @@
-# Week 1 - Day 1: Project Setup & Data Loading
+# Week 1 - Day 1: Data Loading System
 
 **Time Estimate:** 8 hours (full day)
-**What You'll Build:** Complete project structure + data loading system
+**What You'll Build:** Complete data loading system
 **End Goal:** Load 181 months of Nigerian macro data, ready for analysis
+**File we're building:** `models/data_loader.py`
+
+> **⚠️ PREREQUISITE:** Complete **Day 0: Project Setup** first!
+> Day 0 creates your folders, installs all packages, and sets up git.
+> If you skipped Day 0, go back and do it now before continuing.
+> Hours 1-4 below contain the same setup steps as a quick reference / verification.
 
 ---
 
@@ -88,7 +94,7 @@ Run this command (creates all folders at once):
 
 ```bash
 mkdir -p data/raw data/processed \
-         src/data_ingestion src/econometrics src/visualization src/utils \
+         models scripts tests dashboard \
          results/stationarity results/cointegration results/ardl results/var results/irf results/fevd results/policy_simulation results/historical_decomposition results/stability results/robustness results/forecasts \
          notebooks docs
 ```
@@ -98,7 +104,7 @@ mkdir -p data/raw data/processed \
 ls -R
 ```
 
-You should see folders: `data/`, `src/`, `results/`, `notebooks/`, `docs/`
+You should see folders: `data/`, `models/`, `scripts/`, `tests/`, `dashboard/`, `results/`, `notebooks/`, `docs/`
 
 ---
 
@@ -170,7 +176,7 @@ MSc Thesis Project: Quantifying the transmission of CBN Monetary Policy Rate (MP
 
 ## Project Structure
 
-- `src/` - Source code
+- `models/` - Source code modules
 - `data/` - Raw and processed data
 - `results/` - Analysis outputs
 - `docs/` - Documentation
@@ -186,7 +192,7 @@ pip install -r requirements.txt
 
 Day 1: Load data
 ```bash
-python src/data_ingestion/data_loader.py
+python models/data_loader.py
 ```
 
 ## Author
@@ -469,11 +475,10 @@ Take a break! You've set up the foundation.
 ### Step 5.1: Create package initialization files
 
 ```bash
-touch src/__init__.py
-touch src/data_ingestion/__init__.py
-touch src/econometrics/__init__.py
-touch src/visualization/__init__.py
-touch src/utils/__init__.py
+touch models/__init__.py
+touch scripts/__init__.py
+touch tests/__init__.py
+touch dashboard/__init__.py
 ```
 
 **What are these?** These empty files tell Python "this folder is a package." Without them, imports won't work.
@@ -482,7 +487,7 @@ touch src/utils/__init__.py
 
 ### Step 5.2: Start building the data loader - Imports and class setup
 
-Create `src/data_ingestion/data_loader.py` and **write this first chunk:**
+Create `models/data_loader.py` and **write this first chunk:**
 
 ```python
 """
@@ -542,7 +547,7 @@ if __name__ == "__main__":
 **Save the file** and test it:
 
 ```bash
-python src/data_ingestion/data_loader.py
+python models/data_loader.py
 ```
 
 **Expected output:**
@@ -618,7 +623,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python src/data_ingestion/data_loader.py
+python models/data_loader.py
 ```
 
 **Expected output:**
@@ -768,7 +773,7 @@ date
 **Save and test again** (should still work):
 
 ```bash
-python src/data_ingestion/data_loader.py
+python models/data_loader.py
 ```
 
 ---
@@ -853,7 +858,7 @@ if __name__ == "__main__":
 **Final test - run the complete loader:**
 
 ```bash
-python src/data_ingestion/data_loader.py
+python models/data_loader.py
 ```
 
 **Expected output:**
@@ -894,8 +899,8 @@ Inflation     181.0   15.005304    6.596838   7.80000   11.37000   13.00000   17
 Your `data_loader.py` should now have **238 lines total**. Check:
 
 ```bash
-wc -l src/data_ingestion/data_loader.py
-# Should show: 238 src/data_ingestion/data_loader.py
+wc -l models/data_loader.py
+# Should show: 238 models/data_loader.py
 ```
 
 ---
@@ -934,6 +939,47 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ---
 
+## Final Code Summary
+
+Here's the complete `models/data_loader.py` file (~238 lines):
+
+**File**: `models/data_loader.py`
+
+**Structure**:
+```python
+class NigerianMacroDataLoader:
+    def __init__(data_dir="data")
+    def load_raw_data(filename="nigeria_macro_data.csv")
+    def validate_data(df)
+    def create_analysis_dataset(df)
+    def save_processed_data(df, filename)
+    def get_data_summary(df)
+    def load_and_prepare()
+
+def main()
+```
+
+**Key capabilities**:
+- Load raw CSV data from CBN/NBS
+- Validate data quality (missing values, ranges)
+- Rename and reorder columns for analysis
+- Save processed data to CSV
+- Generate descriptive statistics
+- Run complete load-validate-prepare pipeline
+
+**Verify your file is complete:**
+```bash
+python -c "
+from models.data_loader import NigerianMacroDataLoader
+import inspect
+methods = [m for m in dir(NigerianMacroDataLoader) if not m.startswith('_')]
+print('Methods:', methods)
+print('Expected: create_analysis_dataset, get_data_summary, load_and_prepare, load_raw_data, save_processed_data, validate_data')
+"
+```
+
+---
+
 ## End of Day 1 Checklist ✅
 
 Before you finish, verify:
@@ -964,7 +1010,7 @@ Before you finish, verify:
 ## Tomorrow (Day 2): Exploratory Data Analysis
 
 **What you'll build:**
-- Plotting utilities (`src/visualization/plots.py`)
+- Plotting utilities (`models/plots.py`)
 - Time series plots for all 4 variables
 - Correlation analysis
 - Trend decomposition

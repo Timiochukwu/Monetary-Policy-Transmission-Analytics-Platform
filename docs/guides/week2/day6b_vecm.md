@@ -3,7 +3,7 @@
 **Time Estimate:** 5 hours
 **What You'll Build:** VECM module as a robustness check alongside VAR
 **End Goal:** Model long-run equilibrium AND short-run dynamics jointly
-**File we're building:** `models/vecm.py`
+**File we're building:** `src/econometrics/vecm.py`
 
 > **When to use this guide:**
 > - You completed Day 4 (cointegration) and Johansen test found rank ≥ 1
@@ -20,7 +20,7 @@
 
 By end of session, you will have:
 
-- ✅ VECM estimation module (`models/vecm.py` — ~280 lines)
+- ✅ VECM estimation module (`src/econometrics/vecm.py` — ~280 lines)
 - ✅ Johansen rank selection (how many cointegrating relationships)
 - ✅ Cointegrating vectors (the long-run equation: what equilibrium looks like)
 - ✅ Adjustment speeds (how fast variables return to equilibrium)
@@ -77,7 +77,7 @@ Where:
 
 ### Step 1.3: Create the module skeleton
 
-Create `models/vecm.py` and write this first chunk:
+Create `src/econometrics/vecm.py` and write this first chunk:
 
 ```python
 """
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
 **Save and test:**
 ```bash
-python models/vecm.py
+python src/econometrics/vecm.py
 ```
 
 **Expected:**
@@ -234,7 +234,7 @@ Run after Day 4 cointegration confirms I(1) variables are cointegrated.
 ```python
 if __name__ == "__main__":
     print("Testing VECM rank selection...")
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
@@ -248,7 +248,7 @@ if __name__ == "__main__":
 
 **Save and test:**
 ```bash
-python models/vecm.py
+python src/econometrics/vecm.py
 ```
 
 **Expected output (approximate):**
@@ -330,7 +330,7 @@ Testing VECM rank selection...
 ```python
 if __name__ == "__main__":
     print("Testing VECM estimation...")
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
@@ -344,7 +344,7 @@ if __name__ == "__main__":
 
 **Save and test:**
 ```bash
-python models/vecm.py
+python src/econometrics/vecm.py
 ```
 
 ---
@@ -483,7 +483,7 @@ This tells you **which variable adjusts** when equilibrium is disturbed.
 **Update test block:**
 ```python
 if __name__ == "__main__":
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
@@ -497,7 +497,7 @@ if __name__ == "__main__":
 
 **Save and test — this is the main economics output:**
 ```bash
-python models/vecm.py
+python src/econometrics/vecm.py
 ```
 
 **What to look for in the output:**
@@ -757,7 +757,7 @@ def main():
     Run VECM analysis on Nigerian monetary policy data.
     Uses I(1) variables only: MPR and ExchangeRate.
     """
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     # Load data
     loader = NigerianMacroDataLoader(data_dir="data")
@@ -791,7 +791,7 @@ if __name__ == "__main__":
 ### Step 5.4: Final test
 
 ```bash
-python models/vecm.py
+python src/econometrics/vecm.py
 ```
 
 **Expected output structure:**
@@ -844,9 +844,9 @@ Thesis interpretation guide:
 
 ## Final Code Summary
 
-Here's the complete `models/vecm.py` file (~280 lines):
+Here's the complete `src/econometrics/vecm.py` file (~280 lines):
 
-**File**: `models/vecm.py`
+**File**: `src/econometrics/vecm.py`
 
 **Structure**:
 ```python
@@ -877,7 +877,7 @@ def main()
 **Verify your file is complete:**
 ```bash
 python -c "
-from models.vecm import VECMAnalyzer
+from src.econometrics.vecm import VECMAnalyzer
 import inspect
 methods = [m for m in dir(VECMAnalyzer) if not m.startswith('_')]
 print('Methods:', methods)
@@ -915,7 +915,7 @@ Chapter 5: Results
 ## Git Commit
 
 ```bash
-git add models/vecm.py
+git add src/econometrics/vecm.py
 git status
 ```
 

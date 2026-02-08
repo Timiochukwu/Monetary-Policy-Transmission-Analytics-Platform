@@ -17,9 +17,9 @@ Today we build **`robustness.py`** - a module for **robustness checks** to valid
 - Subsample stability analysis
 - Bootstrap confidence intervals
 - Parameter stability tests
-- Complete `models/robustness.py` (~380 lines)
+- Complete `src/econometrics/robustness_checks.py` (~380 lines)
 
-**File we're building**: `models/robustness.py`
+**File we're building**: `src/econometrics/robustness_checks.py`
 
 ---
 
@@ -70,17 +70,17 @@ Today we build **`robustness.py`** - a module for **robustness checks** to valid
 ### Step 1: Create file
 
 ```bash
-cd models
-touch robustness.py
+cd src/econometrics
+touch robustness_checks.py
 ```
 
-Open `models/robustness.py` in your editor.
+Open `src/econometrics/robustness_checks.py` in your editor.
 
 ---
 
 ### Step 2: Build basic structure (Hour 1)
 
-Write this code in `models/robustness.py`:
+Write this code in `src/econometrics/robustness_checks.py`:
 
 ```python
 """
@@ -157,8 +157,8 @@ Create `test_day12_hour1.py`:
 ```python
 """Test Hour 1: Basic RobustnessChecker structure"""
 
-from models.robustness import RobustnessChecker
-from data.data_loader import DataLoader
+from src.econometrics.robustness_checks import RobustnessChecker
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -377,8 +377,8 @@ Create `test_day12_hour2.py`:
 ```python
 """Test Hour 2: Rolling window estimation"""
 
-from models.robustness import RobustnessChecker
-from data.data_loader import DataLoader
+from src.econometrics.robustness_checks import RobustnessChecker
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -556,8 +556,8 @@ Create `test_day12_hour3.py`:
 ```python
 """Test Hour 3: Plot rolling coefficients"""
 
-from models.robustness import RobustnessChecker
-from data.data_loader import DataLoader
+from src.econometrics.robustness_checks import RobustnessChecker
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -771,8 +771,8 @@ Create `test_day12_hour5.py`:
 ```python
 """Test Hour 5: Subsample analysis"""
 
-from models.robustness import RobustnessChecker
-from data.data_loader import DataLoader
+from src.econometrics.robustness_checks import RobustnessChecker
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -1020,8 +1020,8 @@ Create `test_day12_hour6.py`:
 ```python
 """Test Hour 6: Bootstrap confidence intervals"""
 
-from models.robustness import RobustnessChecker
-from data.data_loader import DataLoader
+from src.econometrics.robustness_checks import RobustnessChecker
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -1239,8 +1239,8 @@ Create `test_day12_hour7.py`:
 ```python
 """Test Hour 7: Chow test"""
 
-from models.robustness import RobustnessChecker
-from data.data_loader import DataLoader
+from src.econometrics.robustness_checks import RobustnessChecker
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -1448,8 +1448,8 @@ Create `test_day12_final.py`:
 ```python
 """Test final: Complete robustness analysis"""
 
-from models.robustness import RobustnessChecker
-from data.data_loader import DataLoader
+from src.econometrics.robustness_checks import RobustnessChecker
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 print("Loading data...")
@@ -1544,7 +1544,7 @@ Results saved to: results/robustness
 
 ## Final Code Summary
 
-**File**: `models/robustness.py` (~380 lines)
+**File**: `src/econometrics/robustness_checks.py` (~380 lines)
 
 **Structure**:
 ```python
@@ -1594,8 +1594,8 @@ class RobustnessChecker:
 ## Files Created Today
 
 ```
-models/
-  robustness.py                     [NEW] ~380 lines
+src/econometrics/
+  robustness_checks.py                     [NEW] ~380 lines
 
 results/
   robustness/
@@ -1622,7 +1622,7 @@ results/
 
 ```python
 # Initialize
-from models.robustness import RobustnessChecker
+from src.econometrics.robustness_checks import RobustnessChecker
 robustness = RobustnessChecker(data_diff, variable_names, save_dir)
 
 # Rolling window

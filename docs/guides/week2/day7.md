@@ -16,9 +16,9 @@ Today we build **`irf.py`** - a module that computes and visualizes **Impulse Re
 - Code to compute IRFs from VAR models
 - Functions to visualize shock responses
 - Analysis of MPR shock on Inflation/Exchange Rate
-- Complete `models/irf.py` (~280 lines)
+- Complete `src/econometrics/irf.py` (~280 lines)
 
-**File we're building**: `models/irf.py`
+**File we're building**: `src/econometrics/irf.py`
 
 ---
 
@@ -56,20 +56,20 @@ An **Impulse Response Function** traces the effect of a one-time shock to one va
 Open your terminal in project root:
 
 ```bash
-# Navigate to models directory
-cd models
+# Navigate to src/econometrics directory
+cd src/econometrics
 
 # Create irf.py
 touch irf.py
 ```
 
-Now open `models/irf.py` in your editor.
+Now open `src/econometrics/irf.py` in your editor.
 
 ---
 
 ### Step 2: Build basic structure (Hour 1)
 
-Write this code in `models/irf.py`:
+Write this code in `src/econometrics/irf.py`:
 
 ```python
 """
@@ -135,9 +135,9 @@ Create a test file `test_day7_hour1.py` in project root:
 ```python
 """Test Hour 1: Basic IRFAnalyzer structure"""
 
-from models.irf import IRFAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.irf import IRFAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 import pandas as pd
 
 # Load data
@@ -149,7 +149,7 @@ df_diff = df.diff().dropna()
 
 # Fit VAR (from Day 6)
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize IRFAnalyzer
@@ -174,7 +174,7 @@ python test_day7_hour1.py
 ```
 [DataLoader] Loading data from data/
 [DataLoader] Loaded 240 rows, 4 variables
-[VARAnalyzer] Initialized with 4 variables
+[VARModel] Initialized with 4 variables
 [IRFAnalyzer] Initialized for 4 variables
 [IRFAnalyzer] Results will be saved to results/irf
 ✓ IRFAnalyzer initialized successfully
@@ -194,7 +194,7 @@ Now add the method to compute IRFs. This uses statsmodels' built-in IRF computat
 
 ### Step 4: Add `compute_irf()` method
 
-Add this method to the `IRFAnalyzer` class in `models/irf.py`:
+Add this method to the `IRFAnalyzer` class in `src/econometrics/irf.py`:
 
 ```python
     def compute_irf(self, periods: int = 12, orthogonalized: bool = True) -> Dict:
@@ -294,9 +294,9 @@ Update `test_day7_hour1.py` (rename to `test_day7_hour2.py`):
 ```python
 """Test Hour 2: Compute IRFs"""
 
-from models.irf import IRFAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.irf import IRFAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -305,7 +305,7 @@ df_diff = df.diff().dropna()
 
 # Fit VAR
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize IRFAnalyzer
@@ -459,9 +459,9 @@ Create `test_day7_hour3.py`:
 ```python
 """Test Hour 3: Extract specific IRFs"""
 
-from models.irf import IRFAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.irf import IRFAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -469,7 +469,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute IRFs
@@ -607,9 +607,9 @@ Create `test_day7_hour5.py`:
 ```python
 """Test Hour 5: Plot IRFs"""
 
-from models.irf import IRFAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.irf import IRFAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -617,7 +617,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute IRFs
@@ -738,9 +738,9 @@ Create `test_day7_hour6.py`:
 ```python
 """Test Hour 6: Plot all responses to MPR shock"""
 
-from models.irf import IRFAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.irf import IRFAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -748,7 +748,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute IRFs
@@ -887,9 +887,9 @@ Create `test_day7_hour7.py`:
 ```python
 """Test Hour 7: IRF summaries"""
 
-from models.irf import IRFAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.irf import IRFAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -897,7 +897,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute IRFs
@@ -1074,9 +1074,9 @@ Create `test_day7_final.py`:
 ```python
 """Test final: Full IRF analysis"""
 
-from models.irf import IRFAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.irf import IRFAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 print("Loading data and fitting VAR...")
@@ -1085,7 +1085,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Run full IRF analysis
@@ -1152,9 +1152,9 @@ Results saved to: results/irf
 
 ## Final Code Summary
 
-Here's the complete `models/irf.py` file (~280 lines):
+Here's the complete `src/econometrics/irf.py` file (~280 lines):
 
-**File**: `models/irf.py`
+**File**: `src/econometrics/irf.py`
 
 **Structure**:
 ```python
@@ -1206,7 +1206,7 @@ class IRFAnalyzer:
 ## Files Created Today
 
 ```
-models/
+src/econometrics/
   irf.py                    [NEW] ~280 lines
 
 results/
@@ -1222,7 +1222,7 @@ results/
 
 **Topic**: Forecast Error Variance Decomposition (FEVD)
 
-**What we'll build**: `models/fevd.py`
+**What we'll build**: `src/econometrics/fevd.py`
 
 **What it does**: Decompose forecast error variance to show which shocks explain each variable's volatility.
 
@@ -1234,7 +1234,7 @@ results/
 
 **Issue 1**: `ImportError: cannot import name 'IRFAnalyzer'`
 - **Cause**: File not saved or wrong directory
-- **Fix**: Ensure `models/irf.py` exists and has `class IRFAnalyzer`
+- **Fix**: Ensure `src/econometrics/irf.py` exists and has `class IRFAnalyzer`
 
 **Issue 2**: `ValueError: Must call compute_irf() first`
 - **Cause**: Trying to plot before computing IRFs
@@ -1254,7 +1254,7 @@ results/
 
 ```python
 # Initialize
-from models.irf import IRFAnalyzer
+from src.econometrics.irf import IRFAnalyzer
 irf_analyzer = IRFAnalyzer(var_results, variable_names, save_dir)
 
 # Compute IRFs

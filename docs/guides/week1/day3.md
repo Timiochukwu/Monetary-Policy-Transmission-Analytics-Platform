@@ -1,8 +1,13 @@
-# Week 1 - Day 3: Stationarity Testing (Unit Root Tests)
+# Week 1 - Day 3: Stationarity Testing
 
 **Time Estimate:** 8 hours (full day)
-**What You'll Build:** Stationarity testing module with ADF, PP, KPSS tests
-**End Goal:** Classify variables as I(0) or I(1) for econometric modeling
+**What You'll Build:** `src/econometrics/stationarity_tests.py` (~430 lines)
+**End Goal:** Determine whether each variable is I(0) or I(1) — critical for choosing ARDL vs VAR vs VECM
+
+**Pre-requisite:** Day 1 & 2 completed. Install new packages:
+```bash
+pip install statsmodels==0.14.1 scipy==1.11.4
+```
 
 ---
 
@@ -10,172 +15,173 @@
 
 By 5 PM today, you will have:
 
-- ✅ New packages installed (statsmodels, scipy)
-- ✅ Stationarity testing module (`models/stationarity.py` - 250 lines)
-- ✅ ADF, PP, KPSS tests implemented
-- ✅ Integration order classification (I(0) vs I(1))
-- ✅ Results saved to `results/stationarity/`
+- ✅ `src/econometrics/stationarity_tests.py` (~430 lines)
+- ✅ ADF test (Augmented Dickey-Fuller) — standard unit root test
+- ✅ PP test (Phillips-Perron) — robust to serial correlation
+- ✅ KPSS test — opposite null: tests if series IS stationary
+- ✅ All three tests on LEVELS and FIRST DIFFERENCES for every variable
+- ✅ Integration order table: `{'MPR': 'I(1)', 'Inflation': 'I(0)', ...}`
+- ✅ ACF/PACF plots saved to `results/stationarity/`
 
-**Pre-requisite:** Days 1-2 completed
-
----
-
-## Hour 1 (9 AM - 10 AM): Install New Packages & Understand Stationarity
-
-### Step 1.1: Install econometric packages
-
-**Today we need statsmodels for unit root tests:**
-
-```bash
-pip install statsmodels==0.14.1 scipy==1.11.4
-```
-
-**Verify installation:**
-
-```bash
-python -c "import statsmodels; print(f'statsmodels {statsmodels.__version__}')"
-python -c "import scipy; print(f'scipy {scipy.__version__}')"
-```
-
-**Expected output:**
-```
-statsmodels 0.14.1
-scipy 1.11.4
-```
+**Why three tests?** Each has different assumptions. Agreement across all three gives a confident conclusion.
 
 ---
 
-### Step 1.2: What is stationarity and why does it matter?
+## Hour 1 (9 AM - 10 AM): Understand Stationarity & Module Setup
 
-**Stationary series:** Mean, variance, and autocorrelation structure don't change over time.
+### Step 1.1: What is stationarity?
 
-**Examples:**
-- **Stationary (I(0)):** Interest rate changes, inflation rate (often)
-- **Non-stationary (I(1)):** Price levels, GDP levels, exchange rates
+**Stationary series:** Constant mean, variance, and autocorrelation over time.
+- Example: Inflation around a mean of ~12% roughly stationary = I(0)
 
-**Why test?**
-- VAR models require stationary data (or cointegrated non-stationary data)
-- Using I(1) data in VAR without cointegration → spurious regressions
-- Need to know: Use levels or differences?
+**Non-stationary series (unit root):** Mean and variance change with time.
+- Example: Exchange Rate keeps trending upward, no mean reversion = I(1)
 
-**Three tests today:**
-1. **ADF (Augmented Dickey-Fuller):** H₀ = unit root exists (I(1))
-2. **PP (Phillips-Perron):** H₀ = unit root exists (I(1))
-3. **KPSS:** H₀ = series is stationary (I(0)) [opposite!]
+**Why it matters for your thesis:**
+- If MPR and ExchangeRate are both I(1) → need cointegration test (Day 4)
+- Mixed I(0) and I(1) → ARDL bounds test is the right approach (Day 5)
+- All I(0) → simple OLS is valid
 
-**Decision rule:**
-- If ADF + PP reject H₀ AND KPSS fails to reject → I(0)
-- If ADF + PP fail to reject OR KPSS rejects → I(1)
+**Three complementary tests:**
+
+| Test | Null Hypothesis | Stationary when |
+|------|----------------|-----------------|
+| ADF  | Unit root exists (non-stationary) | p < 0.05 |
+| PP   | Unit root exists (non-stationary) | p < 0.05 |
+| KPSS | Series IS stationary | p > 0.05 (opposite!) |
+
+**Note:** KPSS is the OPPOSITE of ADF/PP. All three agree when:
+- ADF: p < 0.05 AND PP: p < 0.05 AND KPSS: p > 0.05
 
 ---
 
-### Step 1.3: Create stationarity module - Basic structure
+### Step 1.2: Create module — imports & colour palette
 
-Create `models/stationarity.py` and **write this first chunk:**
+Create `src/econometrics/stationarity_tests.py` and **write this first chunk:**
 
 ```python
 """
-Stationarity Tests for Nigerian Monetary Policy Analysis
+Stationarity-Testing Module — Nigerian Monetary Policy Transmission Analysis
 
-This module implements unit root tests (ADF, PP, KPSS) to determine
-integration orders of time series variables.
+Implements three complementary unit-root tests:
 
-Author: Monetary Policy Analytics Team
-Date: 2025-02
+    ADF   - Augmented Dickey-Fuller        (statsmodels)
+    PP    - Phillips-Perron                (statsmodels OLS + HAC covariance)
+    KPSS  - Kwiatkowski-Phillips-Schmidt-Shin  (statsmodels)
+
+Each test is run on LEVELS and on FIRST DIFFERENCES.  The module then
+determines the integration order I(0)/I(1) for every variable.
+
+Day 3 deliverable.  New dependencies: statsmodels, scipy.
+
+Academic references
+-------------------
+Phillips & Perron (1988)  - Econometrica 56(2)
+Kwiatkowski et al. (1992) - Journal of Econometrics 54
+Hamilton (1994) Ch.15     - Time-Series Analysis (textbook)
 """
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
+
 from statsmodels.tsa.stattools import adfuller, kpss
-from statsmodels.tsa.stattools import pacf  # For lag selection
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+import statsmodels.api as sm
+
+
+# ─────────────────────────────────────────────────────────────────────
+# COLOUR PALETTE  (kept in sync with plots.py)
+# ─────────────────────────────────────────────────────────────────────
+
+_COLORS = {
+    "MPR":            "#2E86AB",
+    "Inflation":      "#A23B72",
+    "ExchangeRate":   "#F18F01",
+    "M2":             "#6A994E",
+}
 
 
 class StationarityTester:
     """
-    Test time series for stationarity using multiple tests.
+    Run ADF / PP / KPSS on every column of df, on both levels and
+    first differences.  Persist results as CSV and plots to save_dir.
+
+    Parameters
+    ----------
+    df       : pd.DataFrame  - columns in VAR order, DatetimeIndex
+    save_dir : str | Path    - e.g. 'results/stationarity'
     """
 
-    def __init__(self, save_dir: str = "results/stationarity"):
-        """
-        Initialize the tester.
-
-        Args:
-            save_dir: Directory to save results
-        """
+    def __init__(self, df: pd.DataFrame, save_dir: str = "results/stationarity"):
+        self.df       = df
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
-        self.results = {}
-        print(f"✓ Results will be saved to: {self.save_dir}")
+
+        self.results            = {}   # filled by run_all_tests()
+        self.integration_orders = {}   # filled by determine_integration_order()
+        print(f"StationarityTester initialized. Results: {self.save_dir}")
 
 
 # Test code
 if __name__ == "__main__":
-    print("Testing stationarity module initialization...")
-    tester = StationarityTester()
-    print("✓ Module initialized successfully!")
+    import sys
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+
+    loader = NigerianMacroDataLoader(data_dir="data")
+    df = loader.load_and_prepare()
+
+    tester = StationarityTester(df, save_dir="results/stationarity")
+    print("StationarityTester initialized successfully!")
 ```
 
 **Save and test:**
 
 ```bash
-python models/stationarity.py
-```
-
-**Expected output:**
-```
-Testing stationarity module initialization...
-✓ Results will be saved to: results/stationarity
-✓ Module initialized successfully!
+python src/econometrics/stationarity_tests.py
 ```
 
 ---
 
 ## Hour 2 (10 AM - 11 AM): Implement ADF Test
 
-### Step 2.1: Add ADF test method
+### Step 2.1: Add the ADF test method
 
 **Add this method to the class** (after `__init__`):
 
 ```python
-    def adf_test(self, series: pd.Series, variable_name: str) -> Dict:
+    # ────────────────────────────────────────────────────────────────
+    # 1.  ADF  (exact - straight from statsmodels)
+    # ────────────────────────────────────────────────────────────────
+    def _run_adf(self, series: pd.Series, name: str) -> Dict:
         """
-        Augmented Dickey-Fuller test for unit root.
+        Augmented Dickey-Fuller test.
 
-        H0: Series has a unit root (non-stationary, I(1))
-        H1: Series is stationary (I(0))
+        H0 : unit root exists  (non-stationary)
+        H1 : no unit root      (stationary)
 
-        Args:
-            series: Time series to test
-            variable_name: Name of the variable
+        Decision : reject H0 means stationary when p < 0.05
 
-        Returns:
-            Dictionary with test results
+        Parameters
+        ----------
+        regression="ct" : includes constant + trend (appropriate for macro data)
+        maxlag=12       : up to 12 lags for monthly data
+        autolag="AIC"   : automatically selects optimal lag length
         """
-        # Run ADF test with automatic lag selection
-        result = adfuller(series.dropna(), autolag='AIC', regression='c')
-
-        # Extract results
-        adf_statistic = result[0]
-        p_value = result[1]
-        used_lags = result[2]
-        critical_values = result[4]
-
-        # Decision
-        is_stationary = p_value < 0.05  # Reject H0 if p < 0.05
+        raw = adfuller(series.dropna(), maxlag=12, regression="ct", autolag="AIC")
 
         return {
-            'variable': variable_name,
-            'test': 'ADF',
-            'statistic': round(adf_statistic, 4),
-            'p_value': round(p_value, 4),
-            'lags_used': used_lags,
-            'critical_1%': round(critical_values['1%'], 4),
-            'critical_5%': round(critical_values['5%'], 4),
-            'critical_10%': round(critical_values['10%'], 4),
-            'stationary': is_stationary,
-            'conclusion': 'I(0) - Stationary' if is_stationary else 'I(1) - Non-stationary'
+            "variable":        name,
+            "test":            "ADF",
+            "test_statistic":  round(raw[0], 4),
+            "p_value":         round(raw[1], 4),
+            "lags_used":       raw[2],
+            "n_obs":           raw[3],
+            "critical_values": raw[4],   # dict '1%', '5%', '10%'
+            "stationary":      raw[1] < 0.05,
         }
 ```
 
@@ -183,551 +189,538 @@ Testing stationarity module initialization...
 
 ```python
 if __name__ == "__main__":
-    print("Testing stationarity module...")
-
-    # Load data
     import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
-    loader = NigerianMacroDataLoader()
+    loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
 
-    tester = StationarityTester()
+    tester = StationarityTester(df, save_dir="results/stationarity")
 
-    # Test ADF on one variable
-    print("\n[1/1] Testing ADF on MPR...")
-    result = tester.adf_test(df['MPR'], 'MPR')
-
-    print("\nADF Test Results:")
-    print(f"  Variable: {result['variable']}")
-    print(f"  Statistic: {result['statistic']}")
-    print(f"  P-value: {result['p_value']}")
-    print(f"  Conclusion: {result['conclusion']}")
-
-    print("\n✓ Test complete!")
+    print("\nRunning ADF test on MPR...")
+    result = tester._run_adf(df['MPR'], 'MPR')
+    print(f"  Statistic: {result['test_statistic']}")
+    print(f"  p-value:   {result['p_value']}")
+    print(f"  Stationary: {result['stationary']}")
 ```
 
 **Save and test:**
 
 ```bash
-python models/stationarity.py
+python src/econometrics/stationarity_tests.py
 ```
 
-**Expected output:**
-```
-[Loading messages...]
-[1/1] Testing ADF on MPR...
-
-ADF Test Results:
-  Variable: MPR
-  Statistic: -1.2345
-  P-value: 0.6543
-  Conclusion: I(1) - Non-stationary
-
-✓ Test complete!
-```
-
-**Great! ADF test is working!**
+**Expected:** p-value > 0.05 for MPR (it has a unit root = non-stationary = I(1))
 
 ---
 
-## Hour 3 (11 AM - 12 PM): Implement PP and KPSS Tests
+## Hour 3 (11 AM - 12 PM): Implement PP & KPSS Tests
 
-### Step 3.1: Add PP test method
+### Step 3.1: Add the Phillips-Perron test
 
-**Add this method after `adf_test`:**
+**Add this method after `_run_adf`:**
 
 ```python
-    def pp_test(self, series: pd.Series, variable_name: str) -> Dict:
+    # ────────────────────────────────────────────────────────────────
+    # 2.  PHILLIPS-PERRON  (statsmodels OLS + Newey-West / HAC)
+    # ────────────────────────────────────────────────────────────────
+    def _run_pp(self, series: pd.Series, name: str) -> Dict:
         """
-        Phillips-Perron test for unit root.
+        Phillips-Perron test via OLS with HAC-corrected standard errors.
 
-        H0: Series has a unit root (non-stationary, I(1))
-        H1: Series is stationary (I(0))
+        The regression  dy_t = mu + delta*t + rho*y_{t-1} + u_t  is estimated
+        by OLS with Newey-West (Bartlett) kernel, automatic bandwidth
+        following Andrews (1991).
 
-        Args:
-            series: Time series to test
-            variable_name: Name of the variable
+        Under H0 : rho = 0  the t-statistic follows the Dickey-Fuller
+        asymptotic distribution — MacKinnon (1994) tables apply.
 
-        Returns:
-            Dictionary with test results
+        H0 : unit root  (non-stationary)
+        H1 : no unit root  (stationary)
         """
-        # Note: statsmodels doesn't have built-in PP test
-        # We use ADF with high lag order as approximation
-        # For production code, use arch package or manual implementation
+        y = series.dropna().values
+        T = len(y)
 
-        result = adfuller(series.dropna(), maxlag=12, regression='c')
+        # Regression variables
+        dy    = np.diff(y)
+        y_lag = y[:-1]
+        trend = np.arange(1, len(dy) + 1, dtype=float)
 
-        adf_statistic = result[0]
-        p_value = result[1]
-        critical_values = result[4]
+        X = sm.add_constant(np.column_stack([trend, y_lag]))
 
-        is_stationary = p_value < 0.05
+        # Newey-West bandwidth
+        bw = max(1, int(np.floor(4.0 * (T / 100.0) ** (2.0 / 9.0))))
+
+        # OLS with HAC covariance
+        model = sm.OLS(dy, X).fit(cov_type="HAC", cov_kwds={"maxlags": bw})
+
+        pp_t = round(model.tvalues[2], 4)
+
+        # Approximate p-value via MacKinnon critical-value table
+        cv = {"1%": -3.428, "5%": -2.862, "10%": -2.572}
+
+        if   pp_t < cv["1%"]:   p_val = 0.005
+        elif pp_t < cv["5%"]:   p_val = 0.02
+        elif pp_t < cv["10%"]:  p_val = 0.08
+        else:                   p_val = 0.40
 
         return {
-            'variable': variable_name,
-            'test': 'PP',
-            'statistic': round(adf_statistic, 4),
-            'p_value': round(p_value, 4),
-            'critical_1%': round(critical_values['1%'], 4),
-            'critical_5%': round(critical_values['5%'], 4),
-            'critical_10%': round(critical_values['10%'], 4),
-            'stationary': is_stationary,
-            'conclusion': 'I(0) - Stationary' if is_stationary else 'I(1) - Non-stationary'
+            "variable":        name,
+            "test":            "PP",
+            "test_statistic":  pp_t,
+            "p_value":         p_val,
+            "critical_values": cv,
+            "stationary":      pp_t < cv["5%"],
         }
 ```
 
----
+### Step 3.2: Add the KPSS test
 
-### Step 3.2: Add KPSS test method
-
-**Add this method after `pp_test`:**
+**Add this method after `_run_pp`:**
 
 ```python
-    def kpss_test(self, series: pd.Series, variable_name: str) -> Dict:
+    # ────────────────────────────────────────────────────────────────
+    # 3.  KPSS  (note the OPPOSITE null hypothesis!)
+    # ────────────────────────────────────────────────────────────────
+    def _run_kpss(self, series: pd.Series, name: str) -> Dict:
         """
-        KPSS test for stationarity.
+        KPSS test - OPPOSITE null hypothesis to ADF/PP.
 
-        H0: Series is stationary (I(0))  ← NOTE: Opposite of ADF/PP!
-        H1: Series has a unit root (I(1))
+        H0 : series IS stationary
+        H1 : unit root exists  (non-stationary)
 
-        Args:
-            series: Time series to test
-            variable_name: Name of the variable
+        Decision : reject H0 means NON-stationary when p < 0.05
+        So  stationary = (p > 0.05) -- FLIPPED vs ADF/PP.
 
-        Returns:
-            Dictionary with test results
+        This is why we need all three tests: they complement each other.
         """
-        # Run KPSS test
-        result = kpss(series.dropna(), regression='c', nlags='auto')
-
-        kpss_statistic = result[0]
-        p_value = result[1]
-        critical_values = result[3]
-
-        # Decision (opposite of ADF/PP!)
-        is_stationary = p_value > 0.05  # Fail to reject H0 if p > 0.05
-
-        return {
-            'variable': variable_name,
-            'test': 'KPSS',
-            'statistic': round(kpss_statistic, 4),
-            'p_value': round(p_value, 4) if p_value <= 0.10 else '>0.10',
-            'critical_1%': round(critical_values['1%'], 4),
-            'critical_5%': round(critical_values['5%'], 4),
-            'critical_10%': round(critical_values['10%'], 4),
-            'stationary': is_stationary,
-            'conclusion': 'I(0) - Stationary' if is_stationary else 'I(1) - Non-stationary'
-        }
+        try:
+            raw = kpss(series.dropna(), regression="ct", nlags="auto")
+            return {
+                "variable":        name,
+                "test":            "KPSS",
+                "test_statistic":  round(raw[0], 4),
+                "p_value":         round(raw[1], 4),
+                "lags_used":       raw[2],
+                "critical_values": raw[3],
+                "stationary":      raw[1] > 0.05,   # OPPOSITE to ADF/PP
+            }
+        except Exception as exc:
+            return {"variable": name, "test": "KPSS", "error": str(exc), "stationary": None}
 ```
 
-**Update test code to test all three:**
+**Update test code:**
 
 ```python
 if __name__ == "__main__":
-    print("Testing stationarity module...")
-
     import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
-    loader = NigerianMacroDataLoader()
+    loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
 
-    tester = StationarityTester()
+    tester = StationarityTester(df, save_dir="results/stationarity")
 
-    print("\n[1/3] Testing ADF on MPR...")
-    adf_result = tester.adf_test(df['MPR'], 'MPR')
-    print(f"  ADF: {adf_result['conclusion']}")
-
-    print("\n[2/3] Testing PP on MPR...")
-    pp_result = tester.pp_test(df['MPR'], 'MPR')
-    print(f"  PP: {pp_result['conclusion']}")
-
-    print("\n[3/3] Testing KPSS on MPR...")
-    kpss_result = tester.kpss_test(df['MPR'], 'MPR')
-    print(f"  KPSS: {kpss_result['conclusion']}")
-
-    print("\n✓ All tests complete!")
+    for var in ['MPR', 'Inflation']:
+        print(f"\n--- {var} ---")
+        adf = tester._run_adf(df[var], var)
+        pp  = tester._run_pp(df[var], var)
+        kps = tester._run_kpss(df[var], var)
+        print(f"  ADF:  stat={adf['test_statistic']:.4f}  p={adf['p_value']:.4f}  stationary={adf['stationary']}")
+        print(f"  PP:   stat={pp['test_statistic']:.4f}  p={pp['p_value']:.3f}  stationary={pp['stationary']}")
+        print(f"  KPSS: stat={kps['test_statistic']:.4f}  p={kps['p_value']:.4f}  stationary={kps['stationary']}")
 ```
 
 **Save and test:**
 
 ```bash
-python models/stationarity.py
+python src/econometrics/stationarity_tests.py
 ```
 
 ---
 
-## Hour 4 (12 PM - 1 PM): LUNCH BREAK 🍽️
+## Hour 4 (12 PM - 1 PM): LUNCH BREAK
 
-Take a break! You've implemented all three unit root tests.
+Take a break! You have all three unit-root tests working.
 
 ---
 
-## Hour 5 (1 PM - 2 PM): Test All Variables & Make Consensus Decision
+## Hour 5 (1 PM - 2 PM): Run All Tests on Levels + First Differences
 
-### Step 5.1: Add method to test all variables
+### Step 5.1: Add the master test runner
 
-**Add this method after `kpss_test`:**
+**Add this method after `_run_kpss`:**
 
 ```python
-    def test_all_variables(self, df: pd.DataFrame) -> pd.DataFrame:
+    # ────────────────────────────────────────────────────────────────
+    # 4.  RUN ALL  (levels + first differences)
+    # ────────────────────────────────────────────────────────────────
+    def run_all_tests(self) -> Dict:
         """
-        Run all three tests on all variables.
+        Execute the full battery on raw levels AND on first differences.
 
-        Args:
-            df: DataFrame with macro variables
-
-        Returns:
-            DataFrame with all test results
+        Returns a nested dict:
+            {
+              "levels":            [list of result dicts],
+              "first_differences": [list of result dicts],
+            }
         """
-        print("\n" + "=" * 80)
-        print("STATIONARITY TESTING - All Variables")
-        print("=" * 80)
+        self.results = {"levels": [], "first_differences": []}
 
-        all_results = []
+        # PANEL A - levels
+        print("\n" + "=" * 70)
+        print("  PANEL A  -  UNIT ROOT TESTS ON LEVELS")
+        print("=" * 70)
+        print(f"  {'Variable':<18} {'ADF t-stat':>11} {'ADF p':>7}"
+              f" {'PP t-stat':>10} {'PP p':>6}"
+              f" {'KPSS stat':>10} {'KPSS p':>7}  Conclusion")
+        print("  " + "-" * 95)
 
-        for col in df.columns:
-            print(f"\nTesting {col}...")
+        for col in self.df.columns:
+            adf    = self._run_adf(self.df[col],  col)
+            pp     = self._run_pp(self.df[col],   col)
+            kpss_r = self._run_kpss(self.df[col], col)
+            self.results["levels"].extend([adf, pp, kpss_r])
 
-            # Run all three tests
-            adf = self.adf_test(df[col], col)
-            pp = self.pp_test(df[col], col)
-            kpss = self.kpss_test(df[col], col)
+            # Consensus: stationary only if ALL three agree
+            agree_stat = (adf["stationary"] and pp["stationary"]
+                          and (kpss_r.get("stationary", False)))
+            label = "I(0) Stationary" if agree_stat else "I(1) Unit root"
 
-            all_results.extend([adf, pp, kpss])
+            kpss_p = kpss_r.get("p_value", "-")
+            print(f"  {col:<18}"
+                  f" {adf['test_statistic']:>10.4f} {adf['p_value']:>7.4f}"
+                  f" {pp['test_statistic']:>10.4f} {pp['p_value']:>6.3f}"
+                  f" {kpss_r.get('test_statistic', 0):>10.4f} {kpss_p:>7}"
+                  f"  {label}")
 
-        # Convert to DataFrame
-        results_df = pd.DataFrame(all_results)
+        # PANEL B - first differences
+        print("\n" + "=" * 70)
+        print("  PANEL B  -  UNIT ROOT TESTS ON FIRST DIFFERENCES (Delta y)")
+        print("=" * 70)
+        print(f"  {'Variable':<18} {'ADF t-stat':>11} {'ADF p':>7}"
+              f" {'PP t-stat':>10} {'PP p':>6}"
+              f" {'KPSS stat':>10} {'KPSS p':>7}  Conclusion")
+        print("  " + "-" * 95)
 
-        return results_df
+        df_d = self.df.diff().dropna()
+
+        for col in df_d.columns:
+            label_d = f"Delta{col}"
+            adf    = self._run_adf(df_d[col],  label_d)
+            pp     = self._run_pp(df_d[col],   label_d)
+            kpss_r = self._run_kpss(df_d[col], label_d)
+            self.results["first_differences"].extend([adf, pp, kpss_r])
+
+            agree_stat = (adf["stationary"] and pp["stationary"]
+                          and (kpss_r.get("stationary", False)))
+            flag = "Stationary" if agree_stat else "Non-stat"
+
+            kpss_p = kpss_r.get("p_value", "-")
+            print(f"  {label_d:<18}"
+                  f" {adf['test_statistic']:>10.4f} {adf['p_value']:>7.4f}"
+                  f" {pp['test_statistic']:>10.4f} {pp['p_value']:>6.3f}"
+                  f" {kpss_r.get('test_statistic', 0):>10.4f} {kpss_p:>7}"
+                  f"  {flag}")
+
+        return self.results
 ```
 
----
-
-### Step 5.2: Add consensus decision method
-
-**Add this method after `test_all_variables`:**
+**Update test code:**
 
 ```python
-    def determine_integration_order(self, results_df: pd.DataFrame) -> pd.DataFrame:
+if __name__ == "__main__":
+    import sys
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+
+    loader = NigerianMacroDataLoader(data_dir="data")
+    df = loader.load_and_prepare()
+
+    tester = StationarityTester(df, save_dir="results/stationarity")
+    results = tester.run_all_tests()
+    print("\nAll tests complete!")
+```
+
+**Save and test:**
+
+```bash
+python src/econometrics/stationarity_tests.py
+```
+
+**You should see Panel A (levels) and Panel B (first differences) in the console.**
+
+---
+
+## Hour 6 (2 PM - 3 PM): Determine Integration Orders
+
+### Step 6.1: Add integration order determination
+
+**Add this method after `run_all_tests`:**
+
+```python
+    # ────────────────────────────────────────────────────────────────
+    # 5.  INTEGRATION-ORDER DETERMINATION
+    # ────────────────────────────────────────────────────────────────
+    def determine_integration_order(self) -> Dict[str, str]:
         """
-        Make consensus decision on integration order.
+        Rule:
+            - I(0)  if ADF rejects at 5% on levels
+            - I(1)  if ADF does NOT reject on levels  BUT  rejects on Delta y
+            - I(2)? if neither level nor Delta y rejects  (flag for review)
 
-        Decision rule:
-        - If ADF AND PP reject H0 (p < 0.05) AND KPSS fails to reject → I(0)
-        - Otherwise → I(1)
-
-        Args:
-            results_df: DataFrame with test results
-
-        Returns:
-            DataFrame with integration orders
+        Returns  {'MPR': 'I(1)', 'Inflation': 'I(0)', ...}
         """
-        integration_orders = []
+        if not self.results:
+            raise RuntimeError("Call run_all_tests() first.")
 
-        for var in results_df['variable'].unique():
-            # Get results for this variable
-            var_results = results_df[results_df['variable'] == var]
+        print("\n" + "=" * 70)
+        print("  INTEGRATION ORDER DETERMINATION")
+        print("=" * 70)
+        print(f"\n  {'Variable':<18} {'Level':<18} {'First Diff':<18} {'Order'}")
+        print("  " + "-" * 60)
 
-            adf_stationary = var_results[var_results['test'] == 'ADF']['stationary'].values[0]
-            pp_stationary = var_results[var_results['test'] == 'PP']['stationary'].values[0]
-            kpss_stationary = var_results[var_results['test'] == 'KPSS']['stationary'].values[0]
+        for col in self.df.columns:
+            # Pull the ADF dicts for this variable
+            lev = next((r for r in self.results["levels"]
+                        if r.get("variable") == col and r["test"] == "ADF"), None)
+            dif = next((r for r in self.results["first_differences"]
+                        if r.get("variable") == f"Delta{col}" and r["test"] == "ADF"), None)
 
-            # Consensus decision
-            if adf_stationary and pp_stationary and kpss_stationary:
-                order = 'I(0)'
-                reason = 'All tests agree: stationary'
-            elif not adf_stationary and not pp_stationary:
-                order = 'I(1)'
-                reason = 'ADF and PP agree: unit root'
-            elif not kpss_stationary:
-                order = 'I(1)'
-                reason = 'KPSS rejects stationarity'
+            if lev and lev["stationary"]:
+                order, lev_txt, dif_txt = "I(0)", "Stationary", "-"
+            elif dif and dif["stationary"]:
+                order, lev_txt, dif_txt = "I(1)", "Unit root",  "Stationary"
             else:
-                order = 'I(1)'  # Conservative: treat as I(1) if mixed
-                reason = 'Mixed signals, conservative I(1)'
+                order, lev_txt, dif_txt = "I(2)?", "Unit root", "Unit root"
 
-            integration_orders.append({
-                'Variable': var,
-                'Order': order,
-                'ADF_stationary': adf_stationary,
-                'PP_stationary': pp_stationary,
-                'KPSS_stationary': kpss_stationary,
-                'Reasoning': reason
-            })
+            self.integration_orders[col] = order
+            print(f"  {col:<18} {lev_txt:<18} {dif_txt:<18} {order}")
 
-        return pd.DataFrame(integration_orders)
+        # ARDL / VAR implications
+        i0 = [v for v, o in self.integration_orders.items() if o == "I(0)"]
+        i1 = [v for v, o in self.integration_orders.items() if o == "I(1)"]
+
+        print("\n  " + "-" * 60)
+        print(f"  I(0) variables : {i0 if i0 else 'none'}")
+        print(f"  I(1) variables : {i1 if i1 else 'none'}")
+        print()
+
+        if i0 and i1:
+            print("  ARDL  - mixed I(0)/I(1)  -> bounds testing is the IDEAL approach.")
+            print("  VAR   - cointegration test needed (Day 4) before deciding levels vs Delta.")
+        elif not i0:
+            print("  ARDL  - all I(1)  -> bounds testing still valid; Johansen also possible.")
+            print("  VAR   - test for cointegration; if found, use VECM.")
+        else:
+            print("  ARDL  - all I(0)  -> simple OLS valid; ARDL can still capture dynamics.")
+
+        return self.integration_orders
 ```
 
 **Update test code:**
 
 ```python
 if __name__ == "__main__":
-    print("Testing stationarity module...")
-
     import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
-    loader = NigerianMacroDataLoader()
+    loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
 
-    tester = StationarityTester()
-
-    print("\n[1/2] Running all tests on all variables...")
-    results_df = tester.test_all_variables(df)
-
-    print("\n[2/2] Determining integration orders...")
-    integration_df = tester.determine_integration_order(results_df)
-
-    print("\n" + "=" * 80)
-    print("INTEGRATION ORDERS")
-    print("=" * 80)
-    print(integration_df.to_string(index=False))
-    print("=" * 80)
-
-    print("\n✓ All tests complete!")
+    tester = StationarityTester(df, save_dir="results/stationarity")
+    tester.run_all_tests()
+    orders = tester.determine_integration_order()
+    print(f"\nIntegration orders: {orders}")
 ```
 
 **Save and test:**
 
 ```bash
-python models/stationarity.py
-```
-
-**Expected output:**
-```
-[Loading messages...]
-STATIONARITY TESTING - All Variables
-
-Testing MPR...
-Testing ExchangeRate...
-Testing M2...
-Testing Inflation...
-
-[2/2] Determining integration orders...
-
-INTEGRATION ORDERS
-Variable       Order  ADF_stationary  PP_stationary  KPSS_stationary  Reasoning
-MPR            I(1)   False           False          False            ADF and PP agree: unit root
-ExchangeRate   I(1)   False           False          False            ADF and PP agree: unit root
-M2             I(0)   True            True           True             All tests agree: stationary
-Inflation      I(0)   True            True           True             All tests agree: stationary
-
-✓ All tests complete!
+python src/econometrics/stationarity_tests.py
 ```
 
 ---
 
-## Hour 6 (2 PM - 3 PM): Save Results & Create Summary
+## Hour 7 (3 PM - 4 PM): Add ACF/PACF Plots & Save CSV Results
 
-### Step 6.1: Add method to save results
+### Step 7.1: Add ACF/PACF plot method
 
 **Add this method after `determine_integration_order`:**
 
 ```python
-    def save_results(self, results_df: pd.DataFrame, integration_df: pd.DataFrame):
-        """
-        Save all results to CSV files.
+    # ────────────────────────────────────────────────────────────────
+    # 6.  ACF / PACF PLOTS
+    # ────────────────────────────────────────────────────────────────
+    def plot_acf_pacf(self):
+        """Two figure-grids: one for levels, one for first differences."""
+        n = len(self.df.columns)
 
-        Args:
-            results_df: Detailed test results
-            integration_df: Integration order summary
-        """
-        # Save detailed results
-        detailed_path = self.save_dir / 'detailed_test_results.csv'
-        results_df.to_csv(detailed_path, index=False)
-        print(f"  ✓ Saved detailed results: {detailed_path}")
+        for label, data in [("levels", self.df),
+                             ("first_differences", self.df.diff().dropna())]:
+            fig, axes = plt.subplots(n, 2, figsize=(14, 3.8 * n))
+            fig.suptitle(
+                f"ACF & PACF - {'Levels' if label == 'levels' else 'First Differences'}",
+                fontsize=15, fontweight="bold", y=1.02,
+            )
 
-        # Save integration orders
-        integration_path = self.save_dir / 'integration_orders.csv'
-        integration_df.to_csv(integration_path, index=False)
-        print(f"  ✓ Saved integration orders: {integration_path}")
+            for i, col in enumerate(data.columns):
+                col_name = col if label == "levels" else f"Delta{col}"
+                c = _COLORS.get(col, "#333333")
 
-    def print_summary(self, integration_df: pd.DataFrame):
-        """
-        Print human-readable summary.
+                plot_acf(data[col].dropna(),  lags=24, ax=axes[i, 0],
+                         alpha=0.05, color=c)
+                axes[i, 0].set_title(f"{col_name} - ACF",  fontsize=11, fontweight="bold")
+                axes[i, 0].set_xlabel("Lag (months)")
+                axes[i, 0].grid(True, alpha=0.2)
 
-        Args:
-            integration_df: Integration orders
-        """
-        print("\n" + "=" * 80)
-        print("STATIONARITY TEST SUMMARY")
-        print("=" * 80)
+                plot_pacf(data[col].dropna(), lags=24, ax=axes[i, 1],
+                          alpha=0.05, color=c, method="ywm")
+                axes[i, 1].set_title(f"{col_name} - PACF", fontsize=11, fontweight="bold")
+                axes[i, 1].set_xlabel("Lag (months)")
+                axes[i, 1].grid(True, alpha=0.2)
 
-        i0_vars = integration_df[integration_df['Order'] == 'I(0)']['Variable'].tolist()
-        i1_vars = integration_df[integration_df['Order'] == 'I(1)']['Variable'].tolist()
+            fig.tight_layout()
+            path = self.save_dir / f"acf_pacf_{label}.png"
+            fig.savefig(path, dpi=300, bbox_inches="tight")
+            print(f"  saved  {path}")
+            plt.close(fig)
+```
 
-        print(f"\n✓ Stationary Variables (I(0)): {', '.join(i0_vars) if i0_vars else 'None'}")
-        print(f"✓ Non-Stationary Variables (I(1)): {', '.join(i1_vars) if i1_vars else 'None'}")
+### Step 7.2: Add save results method
 
-        print("\n📊 IMPLICATIONS FOR MODELING:")
-        if len(i1_vars) > 0 and len(i0_vars) > 0:
-            print("  → Mixed integration orders detected")
-            print("  → Use ARDL bounds testing approach (Day 5)")
-            print("  → Or test for cointegration (Day 4)")
-        elif len(i1_vars) > 0:
-            print("  → All variables are I(1)")
-            print("  → Test for cointegration (Day 4)")
-            print("  → If cointegrated, use VECM or levels VAR")
-        else:
-            print("  → All variables are I(0)")
-            print("  → Can use VAR in levels directly")
+**Add this method after `plot_acf_pacf`:**
 
-        print("=" * 80)
+```python
+    # ────────────────────────────────────────────────────────────────
+    # 7.  SAVE RESULTS TO CSV
+    # ────────────────────────────────────────────────────────────────
+    def save_results(self):
+        """Persist every result dict as flat CSV rows."""
+        if not self.results:
+            print("  Nothing to save - run run_all_tests() first.")
+            return
+
+        for panel, key in [("levels", "unit_root_tests_levels.csv"),
+                            ("first_differences", "unit_root_tests_first_differences.csv")]:
+            rows = []
+            for r in self.results[panel]:
+                if "error" in r:
+                    continue   # skip failed KPSS gracefully
+                row = {
+                    "Variable":       r["variable"],
+                    "Test":           r["test"],
+                    "Test_Statistic": r["test_statistic"],
+                    "P_Value":        r.get("p_value", "approx"),
+                    "Stationary":     r.get("stationary"),
+                }
+                cv = r.get("critical_values", {})
+                if isinstance(cv, dict):
+                    for k, v in cv.items():
+                        row[f"CV_{k}"] = round(v, 3) if isinstance(v, (int, float)) else v
+                rows.append(row)
+
+            if rows:
+                path = self.save_dir / key
+                pd.DataFrame(rows).to_csv(path, index=False)
+                print(f"  saved  {path}")
+
+        # Integration-order summary
+        if self.integration_orders:
+            path = self.save_dir / "integration_orders.csv"
+            pd.DataFrame(
+                [{"Variable": v, "Order": o}
+                 for v, o in self.integration_orders.items()]
+            ).to_csv(path, index=False)
+            print(f"  saved  {path}")
+```
+
+**Save and test:**
+
+```bash
+python src/econometrics/stationarity_tests.py
 ```
 
 ---
 
-## Hour 7 (3 PM - 4 PM): Create Master Analysis Function
+## Hour 8 (4 PM - 5 PM): Add Full Pipeline & Commit
 
-### Step 7.1: Add comprehensive analysis method
+### Step 8.1: Add run_full_analysis() and main()
 
-**Add this method after `print_summary`:**
-
-```python
-    def run_full_analysis(self, df: pd.DataFrame):
-        """
-        Run complete stationarity analysis.
-
-        Args:
-            df: DataFrame with macro variables
-        """
-        print("\n" + "=" * 80)
-        print("FULL STATIONARITY ANALYSIS - Nigerian Macro Variables")
-        print("=" * 80)
-
-        print("\n[1/4] Running unit root tests on all variables...")
-        results_df = self.test_all_variables(df)
-
-        print("\n[2/4] Making consensus decisions...")
-        integration_df = self.determine_integration_order(results_df)
-
-        print("\n[3/4] Saving results...")
-        self.save_results(results_df, integration_df)
-
-        print("\n[4/4] Printing summary...")
-        self.print_summary(integration_df)
-
-        # Store results in instance
-        self.results = {
-            'detailed': results_df,
-            'integration_orders': integration_df
-        }
-
-        print("\n✓ ANALYSIS COMPLETE!")
-        return self.results
-```
-
-**Update main function:**
+**Add this final section:**
 
 ```python
+    # ────────────────────────────────────────────────────────────────
+    # 8.  FULL PIPELINE
+    # ────────────────────────────────────────────────────────────────
+    def run_full_analysis(self):
+        """One call does everything: test -> order -> plot -> save."""
+        print("\n" + "=" * 70)
+        print("  STATIONARITY ANALYSIS - FULL PIPELINE")
+        print("=" * 70)
+
+        self.run_all_tests()
+        self.determine_integration_order()
+
+        print("\n  [Plotting] ACF / PACF ...")
+        self.plot_acf_pacf()
+
+        print("\n  [Saving]   CSV results ...")
+        self.save_results()
+
+        print("\n" + "=" * 70)
+        print("  STATIONARITY ANALYSIS COMPLETE")
+        print("=" * 70)
+
+        return self.results, self.integration_orders
+
+
+# ─────────────────────────────────────────────────────────────────────
+# CLI ENTRY-POINT
+# ─────────────────────────────────────────────────────────────────────
+
 def main():
-    """
-    Main execution: Run stationarity tests.
-    """
-    print("=" * 80)
-    print("NIGERIAN MONETARY POLICY - STATIONARITY ANALYSIS")
-    print("=" * 80)
-
-    # Load data
     import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
-    print("\nLoading data...")
-    loader = NigerianMacroDataLoader()
-    df = loader.load_and_prepare()
+    loader = NigerianMacroDataLoader(data_dir="data")
+    df     = loader.load_and_prepare()
 
-    # Run stationarity tests
-    tester = StationarityTester(save_dir="results/stationarity")
-    results = tester.run_full_analysis(df)
-
-    return results
+    tester = StationarityTester(df, save_dir="results/stationarity")
+    tester.run_full_analysis()
 
 
 if __name__ == "__main__":
-    results = main()
+    main()
 ```
 
-**Save and run final test:**
+**Save and run full pipeline:**
 
 ```bash
-python models/stationarity.py
+python src/econometrics/stationarity_tests.py
 ```
 
-**Expected output:**
-```
-[Loading messages...]
-FULL STATIONARITY ANALYSIS - Nigerian Macro Variables
-
-[1/4] Running unit root tests on all variables...
-Testing MPR...
-Testing ExchangeRate...
-Testing M2...
-Testing Inflation...
-
-[2/4] Making consensus decisions...
-
-[3/4] Saving results...
-  ✓ Saved detailed results: results/stationarity/detailed_test_results.csv
-  ✓ Saved integration orders: results/stationarity/integration_orders.csv
-
-[4/4] Printing summary...
-
-STATIONARITY TEST SUMMARY
-
-✓ Stationary Variables (I(0)): M2, Inflation
-✓ Non-Stationary Variables (I(1)): MPR, ExchangeRate
-
-📊 IMPLICATIONS FOR MODELING:
-  → Mixed integration orders detected
-  → Use ARDL bounds testing approach (Day 5)
-  → Or test for cointegration (Day 4)
-
-✓ ANALYSIS COMPLETE!
-```
-
-**Verify results saved:**
-```bash
-ls -lh results/stationarity/
-# Should show: detailed_test_results.csv, integration_orders.csv
-```
-
-**Perfect! Your stationarity testing module is complete!**
-
----
-
-## Hour 8 (4 PM - 5 PM): Verify & Git Commit
-
-### Step 8.1: Verify file completeness
+**Verify outputs:**
 
 ```bash
-wc -l models/stationarity.py
-# Should show: ~250 lines
+wc -l src/econometrics/stationarity_tests.py
+# Should show: ~430 lines
+
+ls results/stationarity/
+# unit_root_tests_levels.csv
+# unit_root_tests_first_differences.csv
+# integration_orders.csv
+# acf_pacf_levels.png
+# acf_pacf_first_differences.png
 ```
 
 ---
 
-### Step 8.2: Review key results
-
-Open the CSV files to understand your data:
-
-```bash
-cat results/stationarity/integration_orders.csv
-```
-
-**Key findings to remember:**
-- **I(1) variables** (MPR, ExchangeRate): Need differencing or cointegration
-- **I(0) variables** (M2, Inflation): Can use in levels
-- **Mixed orders**: Requires ARDL or cointegration testing
-
----
-
-### Step 8.3: Commit everything
+### Step 8.2: Commit everything
 
 ```bash
 git add .
@@ -737,25 +730,22 @@ git status
 **Commit:**
 
 ```bash
-git commit -m "Day 3: Stationarity testing (unit root tests)
+git commit -m "Day 3: Stationarity testing (ADF + PP + KPSS)
 
-- Installed statsmodels 0.14.1, scipy 1.11.4
-- Created stationarity testing module (250 lines, built in chunks)
-- Implemented ADF, PP, KPSS tests
-- Consensus integration order classification
+- src/econometrics/stationarity_tests.py (430 lines)
+  - StationarityTester class
+  - ADF, Phillips-Perron, KPSS on levels and first differences
+  - Integration order determination
+  - ACF/PACF plots
+  - CSV results
 
-Results:
-  • I(1): MPR, ExchangeRate (non-stationary, unit root)
-  • I(0): M2, Inflation (stationary)
-  • Mixed integration orders → ARDL approach needed
+Key results (fill in actual findings):
+  - MPR:          I(?)
+  - Inflation:    I(?)
+  - ExchangeRate: I(?)
+  - M2:           I(?)
 
-Outputs: results/stationarity/ (2 CSV files)
-
-Implication: Cannot use standard VAR in levels.
-Need to:
-  1. Test for cointegration (Day 4)
-  2. Use ARDL bounds test (Day 5)
-  3. Or difference I(1) variables
+Outputs: results/stationarity/ (3 CSVs + 2 PNG plots)
 
 https://claude.ai/code/session_019oWdezYCv1NxdFa4QYPPhs"
 ```
@@ -770,110 +760,91 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ## Final Code Summary
 
-Here's the complete `models/stationarity.py` file (~250 lines):
+**File**: `src/econometrics/stationarity_tests.py`
 
-**File**: `models/stationarity.py`
-
-**Structure**:
 ```python
+# Module-level: _COLORS dict
+
 class StationarityTester:
-    def __init__(save_dir="results/stationarity")
-    def adf_test(series, variable_name)
-    def pp_test(series, variable_name)
-    def kpss_test(series, variable_name)
-    def test_all_variables(df)
-    def determine_integration_order(results_df)
-    def save_results(results_df, integration_df)
-    def print_summary(integration_df)
-    def run_full_analysis(df)
+    def __init__(df, save_dir="results/stationarity")
+    def _run_adf(series, name)
+    def _run_pp(series, name)
+    def _run_kpss(series, name)
+    def run_all_tests()
+    def determine_integration_order()
+    def plot_acf_pacf()
+    def save_results()
+    def run_full_analysis()
 
 def main()
 ```
 
-**Key capabilities**:
-- Augmented Dickey-Fuller (ADF) unit root test
-- Phillips-Perron (PP) unit root test
-- KPSS stationarity test
-- Test all 4 variables automatically
-- Consensus integration order (I(0) vs I(1))
-- Save results tables to CSV
-
-**Verify your file is complete:**
+**Verify:**
 ```bash
 python -c "
-from models.stationarity import StationarityTester
-import inspect
-methods = [m for m in dir(StationarityTester) if not m.startswith('_')]
+from src.econometrics.stationarity_tests import StationarityTester
+methods = [m for m in dir(StationarityTester) if not m.startswith('__')]
 print('Methods:', methods)
 "
 ```
 
 ---
 
-## End of Day 3 Checklist ✅
+## End of Day 3 Checklist
 
-Before you finish, verify:
-
-- [ ] statsmodels and scipy installed
-- [ ] `stationarity.py` runs without errors
-- [ ] You see 2 CSV files in `results/stationarity/`
-- [ ] Integration orders CSV shows I(0) and I(1) classification
-- [ ] You understand why MPR and ExchangeRate are I(1)
-- [ ] You understand the implication (need cointegration or ARDL)
+- [ ] `stationarity_tests.py` runs without errors
+- [ ] Panel A (levels) and Panel B (first differences) printed
+- [ ] `results/stationarity/integration_orders.csv` created
+- [ ] 2 ACF/PACF PNG plots saved
+- [ ] You understand KPSS null is opposite to ADF/PP
 - [ ] Git commit successful
 
-**If all boxes checked → DAY 3 COMPLETE! 🎉**
+**If all boxes checked -> DAY 3 COMPLETE!**
 
 ---
 
 ## What You Built Today
 
-**Files created:** 1 (`stationarity.py`)
-**Lines of code:** ~250 (built in 6 chunks over 6 hours)
-**Tests implemented:** 3 (ADF, PP, KPSS)
-**Skills learned:** Unit root testing, integration orders, consensus decision-making
+**File created:** 1 (`stationarity_tests.py`)
+**Lines of code:** ~430
+**Tests implemented:** 3 (ADF, PP, KPSS) on both levels and first differences
 
-**Key discovery:** MPR and ExchangeRate are I(1), but M2 and Inflation are I(0). This is a **mixed integration order** scenario, which requires special handling.
+**Key result for your thesis:**
+- Typical finding: MPR = I(1), ExchangeRate = I(1), M2 = I(0), Inflation = I(0)
+- Mixed orders means ARDL is the right model (Day 5)
+- I(1) pairs need cointegration testing (Day 4)
 
 ---
 
 ## Tomorrow (Day 4): Cointegration Testing
 
-**What you'll build:**
-- Cointegration testing module (`models/cointegration.py`)
-- Engle-Granger two-step test
-- Johansen multivariate test
-- Cointegration rank determination
-
-**Question to answer:** Do the I(1) variables (MPR, ExchangeRate) have a long-run equilibrium relationship?
-
-**Time:** 8 hours
-**Difficulty:** Same as Day 3
+**What you'll build:** `src/econometrics/cointegration_tests.py`
+- Engle-Granger pairwise tests using `statsmodels.tsa.stattools.coint`
+- Johansen multivariate test (trace + max-eigenvalue statistics)
+- Residual plots for visual confirmation
 
 ---
 
 ## Troubleshooting
 
-**"ImportError: No module named statsmodels"**
-```bash
-pip install statsmodels==0.14.1
+**"KPSS InterpolationWarning"**
+```python
+# Normal — p-value is bounded between 0.01 and 0.10
+# Suppress: import warnings; warnings.filterwarnings('ignore')
 ```
 
-**"All variables showing I(1)"**
-- This is possible if data has strong trends
-- Check: Are you using growth rates by mistake?
-- Verify with: `df.plot()` - should see levels, not changes
+**"adfuller returns large positive statistic"**
+```python
+# Large positive = strong evidence of unit root (non-stationary)
+# Need VERY NEGATIVE (< -3.0) to reject unit root
+```
 
-**"KPSS results contradict ADF"**
-- This is common! Tests have different power
-- Use consensus approach (check all three)
-- When in doubt, treat as I(1) (conservative)
-
-**"ADF p-value exactly 0.00 or 1.00"**
-- Extreme values are possible
-- Check: `df[col].describe()` - any constant values?
-- Check: Any missing values? `df[col].isnull().sum()`
+**"PP test gives different result than ADF"**
+```python
+# This can happen — use majority result (2 out of 3)
+# Look at ACF plots for visual confirmation
+```
 
 ---
 
-**Great work! See you tomorrow for Day 4! 💪**
+**Great work! See you tomorrow for Day 4!**

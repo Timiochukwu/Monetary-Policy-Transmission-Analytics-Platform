@@ -10,7 +10,7 @@
 
 By 5 PM today, you will have:
 
-- ✅ VAR model estimation module (`models/var_model.py` - 290 lines)
+- ✅ VAR model estimation module (`src/econometrics/var_model.py` - 290 lines)
 - ✅ Automatic lag selection (AIC, BIC, HQ criteria)
 - ✅ VAR model estimation with proper ordering
 - ✅ Granger causality tests (all variable pairs)
@@ -65,7 +65,7 @@ Inflation_t = c₄ + ... (similar)
 
 ### Step 1.2: Create VAR module - Basic structure
 
-Create `models/var_model.py` and **write this first chunk:**
+Create `src/econometrics/var_model.py` and **write this first chunk:**
 
 ```python
 """
@@ -81,10 +81,10 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from typing import Dict, List, Tuple
-from statsmodels.tsa.api import VAR as VARModel
+from statsmodels.tsa.api import VAR
 
 
-class VARAnalyzer:
+class VARModel:
     """
     VAR model estimation and analysis.
     """
@@ -120,19 +120,19 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
-    var = VARAnalyzer(df)
+    var = VARModel(df)
     print("✓ Module initialized successfully!")
 ```
 
 **Save and test:**
 
 ```bash
-python models/var_model.py
+python src/econometrics/var_model.py
 ```
 
 **Expected output:**
@@ -169,7 +169,7 @@ python models/var_model.py
         print("=" * 80)
 
         # Create VAR model instance
-        model = VARModel(self.data)
+        model = VAR(self.data)
 
         # Select lag order
         lag_order_results = model.select_order(maxlags=max_lags)
@@ -203,12 +203,12 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
-    var = VARAnalyzer(df)
+    var = VARModel(df)
 
     print("\n[1/1] Testing lag selection...")
     opt_lag = var.select_lags(max_lags=12, ic='aic')
@@ -220,7 +220,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python models/var_model.py
+python src/econometrics/var_model.py
 ```
 
 **Expected output:**
@@ -272,7 +272,7 @@ Optimal lag: 11
         print("=" * 80)
 
         # Create and fit VAR model
-        model = VARModel(self.data)
+        model = VAR(self.data)
         self.res = model.fit(lags)
 
         print(f"\n✓ VAR({lags}) model estimated successfully")
@@ -313,12 +313,12 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
-    var = VARAnalyzer(df)
+    var = VARModel(df)
 
     print("\n[1/2] Selecting lags...")
     var.select_lags(max_lags=12, ic='aic')
@@ -332,7 +332,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python models/var_model.py
+python src/econometrics/var_model.py
 ```
 
 ---
@@ -444,12 +444,12 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
-    var = VARAnalyzer(df)
+    var = VARModel(df)
 
     print("\n[1/3] Selecting lags...")
     var.select_lags(max_lags=12, ic='aic')
@@ -466,7 +466,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python models/var_model.py
+python src/econometrics/var_model.py
 ```
 
 ---
@@ -652,14 +652,14 @@ def main():
     # Load data
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     print("\nLoading data...")
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
     # Run VAR analysis
-    var = VARAnalyzer(df, save_dir="results/var")
+    var = VARModel(df, save_dir="results/var")
     results = var.run_full_analysis(max_lags=12, ic='aic', alpha=0.05)
 
     return results
@@ -672,7 +672,7 @@ if __name__ == "__main__":
 **Save and run final test:**
 
 ```bash
-python models/var_model.py
+python src/econometrics/var_model.py
 ```
 
 **Expected output:**
@@ -713,7 +713,7 @@ VAR ANALYSIS SUMMARY
 ### Step 8.1: Verify file completeness
 
 ```bash
-wc -l models/var_model.py
+wc -l src/econometrics/var_model.py
 # Should show: ~290 lines
 ```
 
@@ -771,13 +771,13 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ## Final Code Summary
 
-Here's the complete `models/var_model.py` file (~350 lines):
+Here's the complete `src/econometrics/var_model.py` file (~350 lines):
 
-**File**: `models/var_model.py`
+**File**: `src/econometrics/var_model.py`
 
 **Structure**:
 ```python
-class VARAnalyzer:
+class VARModel:
     def __init__(df, variable_names, save_dir="results/var")
     def select_lags(max_lags=12, ic="aic")
     def fit(lags=None)
@@ -802,9 +802,9 @@ def main()
 **Verify your file is complete:**
 ```bash
 python -c "
-from models.var_model import VARAnalyzer
+from src.econometrics.var_model import VARModel
 import inspect
-methods = [m for m in dir(VARAnalyzer) if not m.startswith('_')]
+methods = [m for m in dir(VARModel) if not m.startswith('_')]
 print('Methods:', methods)
 "
 ```
@@ -840,7 +840,7 @@ Before you finish, verify:
 ## Tomorrow (Day 7): Impulse Response Functions
 
 **What you'll build:**
-- IRF module (`models/irf.py`)
+- IRF module (`src/econometrics/irf.py`)
 - Orthogonalized impulse responses (Cholesky decomposition)
 - IRF plots for all shock-response combinations
 - Peak response analysis

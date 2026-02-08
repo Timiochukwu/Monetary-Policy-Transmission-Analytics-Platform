@@ -16,9 +16,9 @@ Today we build **`fevd.py`** - a module that computes **Forecast Error Variance 
 - Code to compute FEVD from VAR models
 - Visualizations showing variance decomposition
 - Analysis of which shocks drive each variable
-- Complete `models/fevd.py` (~260 lines)
+- Complete `src/econometrics/fevd.py` (~260 lines)
 
-**File we're building**: `models/fevd.py`
+**File we're building**: `src/econometrics/fevd.py`
 
 ---
 
@@ -60,17 +60,17 @@ FEVD of Inflation at horizon 12:
 Open terminal in project root:
 
 ```bash
-cd models
+cd src/econometrics
 touch fevd.py
 ```
 
-Open `models/fevd.py` in your editor.
+Open `src/econometrics/fevd.py` in your editor.
 
 ---
 
 ### Step 2: Build basic structure (Hour 1)
 
-Write this code in `models/fevd.py`:
+Write this code in `src/econometrics/fevd.py`:
 
 ```python
 """
@@ -136,9 +136,9 @@ Create `test_day8_hour1.py` in project root:
 ```python
 """Test Hour 1: Basic FEVDAnalyzer structure"""
 
-from models.fevd import FEVDAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.fevd import FEVDAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -147,7 +147,7 @@ df_diff = df.diff().dropna()
 
 # Fit VAR
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize FEVDAnalyzer
@@ -272,9 +272,9 @@ Create `test_day8_hour2.py`:
 ```python
 """Test Hour 2: Compute FEVD"""
 
-from models.fevd import FEVDAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.fevd import FEVDAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -282,7 +282,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize FEVDAnalyzer
@@ -434,9 +434,9 @@ Create `test_day8_hour3.py`:
 ```python
 """Test Hour 3: Query FEVD"""
 
-from models.fevd import FEVDAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.fevd import FEVDAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -444,7 +444,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute FEVD
@@ -602,9 +602,9 @@ Create `test_day8_hour5.py`:
 ```python
 """Test Hour 5: Plot FEVD"""
 
-from models.fevd import FEVDAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.fevd import FEVDAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -612,7 +612,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute FEVD
@@ -729,9 +729,9 @@ Create `test_day8_hour6.py`:
 ```python
 """Test Hour 6: Plot all FEVDs"""
 
-from models.fevd import FEVDAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.fevd import FEVDAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -739,7 +739,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute FEVD
@@ -850,9 +850,9 @@ Create `test_day8_hour7.py`:
 ```python
 """Test Hour 7: FEVD summaries and tables"""
 
-from models.fevd import FEVDAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.fevd import FEVDAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -860,7 +860,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute FEVD
@@ -1010,9 +1010,9 @@ Create `test_day8_final.py`:
 ```python
 """Test final: Full FEVD analysis"""
 
-from models.fevd import FEVDAnalyzer
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.fevd import FEVDAnalyzer
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 print("Loading data and fitting VAR...")
@@ -1021,7 +1021,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Run full FEVD analysis
@@ -1114,9 +1114,9 @@ Results saved to: results/fevd
 
 ## Final Code Summary
 
-Here's the complete `models/fevd.py` file (~260 lines):
+Here's the complete `src/econometrics/fevd.py` file (~260 lines):
 
-**File**: `models/fevd.py`
+**File**: `src/econometrics/fevd.py`
 
 **Structure**:
 ```python
@@ -1168,7 +1168,7 @@ class FEVDAnalyzer:
 ## Files Created Today
 
 ```
-models/
+src/econometrics/
   fevd.py                   [NEW] ~260 lines
 
 results/
@@ -1186,7 +1186,7 @@ results/
 
 **Topic**: Policy Simulation
 
-**What we'll build**: `models/policy_simulation.py`
+**What we'll build**: `src/econometrics/policy_simulation.py`
 
 **What it does**: Simulate counterfactual scenarios (e.g., "What if MPR increased by 100 bps in 2020?")
 
@@ -1198,7 +1198,7 @@ results/
 
 **Issue 1**: `ImportError: cannot import name 'FEVDAnalyzer'`
 - **Cause**: File not saved or wrong directory
-- **Fix**: Ensure `models/fevd.py` exists with `class FEVDAnalyzer`
+- **Fix**: Ensure `src/econometrics/fevd.py` exists with `class FEVDAnalyzer`
 
 **Issue 2**: FEVD rows don't sum to 100%
 - **Cause**: Numerical precision or incorrect computation
@@ -1218,7 +1218,7 @@ results/
 
 ```python
 # Initialize
-from models.fevd import FEVDAnalyzer
+from src.econometrics.fevd import FEVDAnalyzer
 fevd_analyzer = FEVDAnalyzer(var_results, variable_names, save_dir)
 
 # Compute FEVD

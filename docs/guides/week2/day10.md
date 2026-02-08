@@ -16,9 +16,9 @@ Today we build **`historical_decomposition.py`** - a module that decomposes actu
 - Code to attribute outcomes to specific shocks
 - Visualizations showing shock contributions
 - Analysis of key historical episodes
-- Complete `models/historical_decomposition.py` (~290 lines)
+- Complete `src/econometrics/historical_decomposition.py` (~290 lines)
 
-**File we're building**: `models/historical_decomposition.py`
+**File we're building**: `src/econometrics/historical_decomposition.py`
 
 ---
 
@@ -56,11 +56,11 @@ Today we build **`historical_decomposition.py`** - a module that decomposes actu
 Open terminal in project root:
 
 ```bash
-cd models
+cd src/econometrics
 touch historical_decomposition.py
 ```
 
-Open `models/historical_decomposition.py` in your editor.
+Open `src/econometrics/historical_decomposition.py` in your editor.
 
 ---
 
@@ -137,9 +137,9 @@ Create `test_day10_hour1.py`:
 ```python
 """Test Hour 1: Basic HistoricalDecomposition structure"""
 
-from models.historical_decomposition import HistoricalDecomposition
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.historical_decomposition import HistoricalDecomposition
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -148,7 +148,7 @@ df = loader.run_pipeline()
 # Fit VAR
 df_diff = df.diff().dropna()
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize HistoricalDecomposition
@@ -407,9 +407,9 @@ Create `test_day10_hour2.py`:
 ```python
 """Test Hour 2: Compute historical decomposition"""
 
-from models.historical_decomposition import HistoricalDecomposition
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.historical_decomposition import HistoricalDecomposition
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -417,7 +417,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute historical decomposition
@@ -583,9 +583,9 @@ Create `test_day10_hour3.py`:
 ```python
 """Test Hour 3: Query decompositions"""
 
-from models.historical_decomposition import HistoricalDecomposition
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.historical_decomposition import HistoricalDecomposition
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -593,7 +593,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute HD
@@ -764,9 +764,9 @@ Create `test_day10_hour5.py`:
 ```python
 """Test Hour 5: Plot historical decomposition"""
 
-from models.historical_decomposition import HistoricalDecomposition
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.historical_decomposition import HistoricalDecomposition
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -774,7 +774,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute HD
@@ -903,9 +903,9 @@ Create `test_day10_hour6.py`:
 ```python
 """Test Hour 6: Plot all decompositions"""
 
-from models.historical_decomposition import HistoricalDecomposition
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.historical_decomposition import HistoricalDecomposition
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -913,7 +913,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute HD
@@ -1063,9 +1063,9 @@ Create `test_day10_hour7.py`:
 ```python
 """Test Hour 7: Episode analysis"""
 
-from models.historical_decomposition import HistoricalDecomposition
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.historical_decomposition import HistoricalDecomposition
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -1073,7 +1073,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Compute HD
@@ -1252,9 +1252,9 @@ Create `test_day10_final.py`:
 ```python
 """Test final: Complete historical decomposition analysis"""
 
-from models.historical_decomposition import HistoricalDecomposition
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.historical_decomposition import HistoricalDecomposition
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 print("Loading data and fitting VAR...")
@@ -1263,7 +1263,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Run full analysis
@@ -1356,9 +1356,9 @@ Results saved to: results/historical_decomp
 
 ## Final Code Summary
 
-Here's the complete `models/historical_decomposition.py` file (~290 lines):
+Here's the complete `src/econometrics/historical_decomposition.py` file (~290 lines):
 
-**File**: `models/historical_decomposition.py`
+**File**: `src/econometrics/historical_decomposition.py`
 
 **Structure**:
 ```python
@@ -1408,7 +1408,7 @@ class HistoricalDecomposition:
 ## Files Created Today
 
 ```
-models/
+src/econometrics/
   historical_decomposition.py   [NEW] ~290 lines
 
 results/
@@ -1450,7 +1450,7 @@ results/
 
 **Issue 1**: `ImportError: cannot import name 'HistoricalDecomposition'`
 - **Cause**: File not saved
-- **Fix**: Ensure `models/historical_decomposition.py` exists
+- **Fix**: Ensure `src/econometrics/historical_decomposition.py` exists
 
 **Issue 2**: Decomposition doesn't sum to actual
 - **Cause**: Numerical errors or incorrect IRF computation
@@ -1470,7 +1470,7 @@ results/
 
 ```python
 # Initialize
-from models.historical_decomposition import HistoricalDecomposition
+from src.econometrics.historical_decomposition import HistoricalDecomposition
 hd = HistoricalDecomposition(var_results, data, variable_names, save_dir)
 
 # Compute decomposition

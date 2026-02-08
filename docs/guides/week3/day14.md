@@ -320,10 +320,10 @@ def generate_full_report(data_path: str, output_dir: str = 'results/reports'):
     output_dir : str
         Output directory for report
     """
-    from data.data_loader import DataLoader
-    from models.var_model import VARAnalyzer
-    from models.irf import IRFAnalyzer
-    from models.fevd import FEVDAnalyzer
+    from src.data_ingestion.data_loader import DataLoader
+    from src.econometrics.var_model import VARModel
+    from src.econometrics.irf import IRFAnalyzer
+    from src.econometrics.fevd import FEVDAnalyzer
 
     print("\n" + "="*60)
     print("AUTOMATED REPORT GENERATION")
@@ -344,7 +344,7 @@ def generate_full_report(data_path: str, output_dir: str = 'results/reports'):
     # Estimate VAR
     print("\nStep 3: Estimating VAR...")
     df_diff = df.diff().dropna()
-    var_analyzer = VARAnalyzer(df_diff, list(df.columns), 'results/var_report')
+    var_analyzer = VARModel(df_diff, list(df.columns), 'results/var_report')
     var_results = var_analyzer.fit(lags=2)
 
     report.generate_executive_summary(var_results, df)

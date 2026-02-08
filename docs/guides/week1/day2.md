@@ -1,8 +1,14 @@
-# Week 1 - Day 2: Exploratory Data Analysis & Visualization
+# Week 1 - Day 2: Data Validation & Exploratory Data Analysis
 
 **Time Estimate:** 8 hours (full day)
-**What You'll Build:** Plotting utilities + time series visualizations
-**End Goal:** Understand your data through plots and statistical summaries
+**What You'll Build:** Data validator + 9 publication-quality visualizations
+**End Goal:** Verify data quality and understand every variable visually
+
+**Files you'll create today:**
+- `src/data_ingestion/data_validator.py` (~270 lines)
+- `src/visualization/plots.py` (~380 lines)
+
+**Pre-requisite:** Day 1 completed (`src/data_ingestion/data_loader.py` working)
 
 ---
 
@@ -10,780 +16,842 @@
 
 By 5 PM today, you will have:
 
-- ✅ Visualization utilities (`models/plots.py` - 180 lines)
-- ✅ Time series plots for all 4 variables
-- ✅ Correlation heatmap
-- ✅ Statistical summaries and trend analysis
-- ✅ Jupyter notebook with all visualizations
-
-**Pre-requisite:** Day 1 completed (data loader working)
+- ✅ Data validator (`src/data_ingestion/data_validator.py` - 270 lines)
+- ✅ 9 professional time-series plots for your thesis (`src/visualization/plots.py` - 380 lines)
+- ✅ Structural-break annotations (2016 devaluation, 2020 COVID, 2023 FX unification)
+- ✅ Publication-quality PNG files saved at 300 DPI
 
 ---
 
-## Hour 1 (9 AM - 10 AM): Verify Day 1 & Create Basic Plots
+## Hour 1 (9 AM - 10 AM): Verify Day 1 & Build DataValidator Structure
 
 ### Step 1.1: Test that Day 1 still works
 
 ```bash
 cd ~/Monetary-Policy-Transmission-Analytics-Platform
-python models/data_loader.py
+python src/data_ingestion/data_loader.py
 ```
 
-**Expected output:** Should load 181 observations successfully.
+**Expected output:** Should load observations successfully.
 
 **If errors:** Go back to Day 1 and fix before proceeding.
 
 ---
 
-### Step 1.2: Create visualization module - Basic structure
+### Step 1.2: Create data validator — Basic structure
 
-Create `models/plots.py` and **write this first chunk:**
+Create `src/data_ingestion/data_validator.py` and **write this first chunk:**
 
 ```python
 """
-Visualization Utilities for Nigerian Monetary Policy Analysis
+Data Validation Module for Nigerian Monetary Policy Analysis
 
-This module provides plotting functions for exploratory data analysis.
+Performs quality checks, outlier detection, and data integrity validation
+for macroeconomic time series data.
 
 Author: Monetary Policy Analytics Team
 Date: 2025-02
 """
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 import numpy as np
-from pathlib import Path
-from typing import Optional, List
+from typing import Dict, List, Tuple
+import warnings
 
 
-# Set default plotting style
-sns.set_style("whitegrid")
-plt.rcParams['figure.figsize'] = (12, 6)
-plt.rcParams['font.size'] = 10
-
-
-class TimeSeriesPlotter:
+class DataValidator:
     """
-    Create time series visualizations for macro data.
+    Validates macroeconomic data quality for econometric analysis.
     """
 
-    def __init__(self, save_dir: str = "results/plots"):
+    def __init__(self, df: pd.DataFrame):
         """
-        Initialize the plotter.
+        Initialize validator with DataFrame.
 
         Args:
-            save_dir: Directory to save plots
+            df: DataFrame with macroeconomic variables
         """
-        self.save_dir = Path(save_dir)
-        self.save_dir.mkdir(parents=True, exist_ok=True)
-        print(f"✓ Plots will be saved to: {self.save_dir}")
+        self.df = df
+        self.validation_report = {}
+        print(f"✓ Validator initialized with {len(df)} observations")
 
 
 # Test code
 if __name__ == "__main__":
-    print("Testing plotter initialization...")
-    plotter = TimeSeriesPlotter()
-    print("✓ Plotter initialized successfully!")
+    import sys
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+
+    loader = NigerianMacroDataLoader(data_dir="data")
+    df = loader.load_and_prepare()
+
+    validator = DataValidator(df)
+    print("✓ DataValidator initialized successfully!")
 ```
 
 **Save and test:**
 
 ```bash
-python models/plots.py
-```
-
-**Expected output:**
-```
-Testing plotter initialization...
-✓ Plots will be saved to: results/plots
-✓ Plotter initialized successfully!
+python src/data_ingestion/data_validator.py
 ```
 
 ---
 
-### Step 1.3: Add single variable plot method
+## Hour 2 (10 AM - 11 AM): Add Missing Values & Outlier Checks
+
+### Step 2.1: Add missing values check method
 
 **Add this method to the class** (after `__init__`):
 
 ```python
-    def plot_single_series(self, df: pd.DataFrame, column: str,
-                          title: Optional[str] = None,
-                          ylabel: Optional[str] = None,
-                          save_name: Optional[str] = None):
+    def check_missing_values(self) -> Dict[str, int]:
         """
-        Plot a single time series.
-
-        Args:
-            df: DataFrame with DatetimeIndex
-            column: Column name to plot
-            title: Plot title (optional)
-            ylabel: Y-axis label (optional)
-            save_name: Filename to save (optional)
-        """
-        fig, ax = plt.subplots(figsize=(12, 6))
-
-        # Plot the series
-        ax.plot(df.index, df[column], linewidth=2, color='steelblue')
-
-        # Labels
-        ax.set_title(title or f"{column} Over Time", fontsize=14, fontweight='bold')
-        ax.set_xlabel("Date", fontsize=12)
-        ax.set_ylabel(ylabel or column, fontsize=12)
-
-        # Grid
-        ax.grid(True, alpha=0.3, linestyle='--')
-
-        # Rotate x-axis labels
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-
-        # Save if requested
-        if save_name:
-            save_path = self.save_dir / save_name
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"  ✓ Saved: {save_path}")
-
-        plt.close(fig)
-```
-
-**Update the test code at the bottom:**
-
-```python
-if __name__ == "__main__":
-    print("Testing plotter...")
-
-    # Load data using Day 1's loader
-    import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
-
-    loader = NigerianMacroDataLoader()
-    df = loader.load_and_prepare()
-
-    # Test single plot
-    print("\nTesting single series plot...")
-    plotter = TimeSeriesPlotter()
-    plotter.plot_single_series(df, 'MPR',
-                              title='Monetary Policy Rate (2010-2025)',
-                              ylabel='Rate (%)',
-                              save_name='mpr_single.png')
-
-    print("\n✓ Test complete! Check results/plots/ folder")
-```
-
-**Save and test:**
-
-```bash
-python models/plots.py
-```
-
-**Expected output:**
-```
-[Data loader output...]
-Testing single series plot...
-✓ Plots will be saved to: results/plots
-  ✓ Saved: results/plots/mpr_single.png
-
-✓ Test complete! Check results/plots/ folder
-```
-
-**Verify the plot exists:**
-```bash
-ls -lh results/plots/
-# Should show: mpr_single.png
-```
-
-**Great! Your first plot is created!**
-
----
-
-## Hour 2 (10 AM - 11 AM): Add Multi-Variable Plots
-
-### Step 2.1: Add method to plot all variables
-
-**Add this method after `plot_single_series`:**
-
-```python
-    def plot_all_variables(self, df: pd.DataFrame, save_name: str = "all_variables.png"):
-        """
-        Create a 2x2 grid of plots for all 4 variables.
-
-        Args:
-            df: DataFrame with MPR, Inflation, ExchangeRate, M2
-            save_name: Filename to save
-        """
-        fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-        fig.suptitle('Nigerian Macro Variables (2010-2025)',
-                    fontsize=16, fontweight='bold', y=0.995)
-
-        # Define variables and their properties
-        variables = [
-            ('MPR', 'Monetary Policy Rate (%)', 'blue'),
-            ('Inflation', 'Inflation Rate (% YoY)', 'red'),
-            ('ExchangeRate', 'Exchange Rate (NGN/USD)', 'green'),
-            ('M2', 'Money Supply M2 (Billions NGN)', 'purple')
-        ]
-
-        # Plot each variable
-        for idx, (var, ylabel, color) in enumerate(variables):
-            row = idx // 2
-            col = idx % 2
-            ax = axes[row, col]
-
-            ax.plot(df.index, df[var], linewidth=2, color=color)
-            ax.set_title(ylabel, fontsize=12, fontweight='bold')
-            ax.set_xlabel('Date', fontsize=10)
-            ax.set_ylabel(ylabel, fontsize=10)
-            ax.grid(True, alpha=0.3, linestyle='--')
-            ax.tick_params(axis='x', rotation=45)
-
-        plt.tight_layout()
-
-        # Save
-        save_path = self.save_dir / save_name
-        fig.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"  ✓ Saved: {save_path}")
-
-        plt.close(fig)
-```
-
-**Update the test code:**
-
-```python
-if __name__ == "__main__":
-    print("Testing plotter...")
-
-    # Load data
-    import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
-
-    loader = NigerianMacroDataLoader()
-    df = loader.load_and_prepare()
-
-    plotter = TimeSeriesPlotter()
-
-    # Test single plot
-    print("\n[1/2] Testing single series plot...")
-    plotter.plot_single_series(df, 'MPR',
-                              title='Monetary Policy Rate (2010-2025)',
-                              ylabel='Rate (%)',
-                              save_name='mpr_single.png')
-
-    # Test multi-variable plot
-    print("\n[2/2] Testing all variables plot...")
-    plotter.plot_all_variables(df, save_name='all_variables.png')
-
-    print("\n✓ All tests complete! Check results/plots/ folder")
-```
-
-**Save and test:**
-
-```bash
-python models/plots.py
-```
-
-**Verify plots:**
-```bash
-ls -lh results/plots/
-# Should show: mpr_single.png, all_variables.png
-```
-
----
-
-## Hour 3 (11 AM - 12 PM): Add Correlation Analysis
-
-### Step 3.1: Add correlation heatmap method
-
-**Add this method after `plot_all_variables`:**
-
-```python
-    def plot_correlation_heatmap(self, df: pd.DataFrame,
-                                save_name: str = "correlation_heatmap.png"):
-        """
-        Create correlation matrix heatmap.
-
-        Args:
-            df: DataFrame with variables
-            save_name: Filename to save
-        """
-        fig, ax = plt.subplots(figsize=(8, 6))
-
-        # Calculate correlation
-        corr = df.corr()
-
-        # Create heatmap
-        sns.heatmap(corr, annot=True, fmt='.2f', cmap='coolwarm',
-                   center=0, square=True, linewidths=1,
-                   cbar_kws={"shrink": 0.8}, ax=ax)
-
-        ax.set_title('Correlation Matrix - Nigerian Macro Variables',
-                    fontsize=14, fontweight='bold', pad=20)
-
-        plt.tight_layout()
-
-        # Save
-        save_path = self.save_dir / save_name
-        fig.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"  ✓ Saved: {save_path}")
-
-        plt.close(fig)
-```
-
-**Update test code to include correlation plot:**
-
-```python
-if __name__ == "__main__":
-    print("Testing plotter...")
-
-    # Load data
-    import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
-
-    loader = NigerianMacroDataLoader()
-    df = loader.load_and_prepare()
-
-    plotter = TimeSeriesPlotter()
-
-    print("\n[1/3] Testing single series plot...")
-    plotter.plot_single_series(df, 'MPR',
-                              title='Monetary Policy Rate (2010-2025)',
-                              ylabel='Rate (%)',
-                              save_name='mpr_single.png')
-
-    print("\n[2/3] Testing all variables plot...")
-    plotter.plot_all_variables(df, save_name='all_variables.png')
-
-    print("\n[3/3] Testing correlation heatmap...")
-    plotter.plot_correlation_heatmap(df, save_name='correlation_heatmap.png')
-
-    print("\n✓ All tests complete! Check results/plots/ folder")
-```
-
-**Save and test:**
-
-```bash
-python models/plots.py
-```
-
----
-
-## Hour 4 (12 PM - 1 PM): LUNCH BREAK 🍽️
-
-Take a break! You've created 3 types of plots.
-
----
-
-## Hour 5 (1 PM - 2 PM): Add Statistical Summary
-
-### Step 5.1: Add summary statistics method
-
-**Add this method after `plot_correlation_heatmap`:**
-
-```python
-    def generate_summary_stats(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Generate comprehensive summary statistics.
-
-        Args:
-            df: DataFrame with variables
+        Check for missing values in each variable.
 
         Returns:
-            DataFrame with summary statistics
+            Dictionary with count of missing values per variable
         """
-        # Basic statistics
-        summary = df.describe().T
+        missing_counts = self.df.isnull().sum().to_dict()
+        missing_pct = (self.df.isnull().sum() / len(self.df) * 100).round(2).to_dict()
 
-        # Add additional statistics
-        summary['Skewness'] = df.skew()
-        summary['Kurtosis'] = df.kurtosis()
-        summary['CV (%)'] = (df.std() / df.mean() * 100).round(2)
-
-        # Add missing values
-        summary['Missing'] = df.isnull().sum()
-        summary['Missing %'] = (df.isnull().sum() / len(df) * 100).round(2)
-
-        return summary
-
-    def print_summary_stats(self, df: pd.DataFrame):
-        """
-        Print formatted summary statistics.
-
-        Args:
-            df: DataFrame with variables
-        """
-        summary = self.generate_summary_stats(df)
-
-        print("\n" + "=" * 80)
-        print("SUMMARY STATISTICS - Nigerian Macro Variables")
-        print("=" * 80)
-        print(summary.to_string())
-        print("=" * 80)
-
-        # Interpretations
-        print("\nKEY INSIGHTS:")
-        print(f"  • MPR Range: {df['MPR'].min():.1f}% to {df['MPR'].max():.1f}%")
-        print(f"  • Inflation Range: {df['Inflation'].min():.1f}% to {df['Inflation'].max():.1f}%")
-        print(f"  • Exchange Rate Range: {df['ExchangeRate'].min():.1f} to {df['ExchangeRate'].max():.1f} NGN/USD")
-        print(f"  • M2 Range: {df['M2'].min()/1e9:.2f}B to {df['M2'].max()/1e9:.2f}B NGN")
-        print()
-```
-
-**Update test code:**
-
-```python
-if __name__ == "__main__":
-    print("Testing plotter...")
-
-    # Load data
-    import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
-
-    loader = NigerianMacroDataLoader()
-    df = loader.load_and_prepare()
-
-    plotter = TimeSeriesPlotter()
-
-    print("\n[1/4] Testing single series plot...")
-    plotter.plot_single_series(df, 'MPR', save_name='mpr_single.png')
-
-    print("\n[2/4] Testing all variables plot...")
-    plotter.plot_all_variables(df, save_name='all_variables.png')
-
-    print("\n[3/4] Testing correlation heatmap...")
-    plotter.plot_correlation_heatmap(df, save_name='correlation_heatmap.png')
-
-    print("\n[4/4] Testing summary statistics...")
-    plotter.print_summary_stats(df)
-
-    print("\n✓ All tests complete!")
-```
-
-**Save and test:**
-
-```bash
-python models/plots.py
-```
-
----
-
-## Hour 6 (2 PM - 3 PM): Add Structural Break Detection (Visual)
-
-### Step 6.1: Add method to highlight key events
-
-**Add this method after `print_summary_stats`:**
-
-```python
-    def plot_with_events(self, df: pd.DataFrame, column: str,
-                        save_name: str = "events_plot.png"):
-        """
-        Plot time series with key economic events marked.
-
-        Args:
-            df: DataFrame with DatetimeIndex
-            column: Column to plot
-            save_name: Filename to save
-        """
-        fig, ax = plt.subplots(figsize=(14, 7))
-
-        # Plot the main series
-        ax.plot(df.index, df[column], linewidth=2, color='steelblue', label=column)
-
-        # Key events in Nigerian economic history
-        events = {
-            '2016-06': ('Naira\nDevaluation', 'red'),
-            '2020-03': ('COVID-19\nPandemic', 'orange'),
-            '2023-06': ('FX\nUnification', 'purple')
+        self.validation_report['missing_values'] = {
+            'counts': missing_counts,
+            'percentages': missing_pct
         }
 
-        for date_str, (label, color) in events.items():
-            event_date = pd.to_datetime(date_str)
-            if event_date in df.index:
-                ax.axvline(event_date, color=color, linestyle='--',
-                          linewidth=2, alpha=0.7, label=label)
+        return missing_counts
+```
 
-                # Add text label
-                y_pos = ax.get_ylim()[1] * 0.9
-                ax.text(event_date, y_pos, label,
-                       rotation=0, ha='center', fontsize=9,
-                       color=color, weight='bold')
+### Step 2.2: Add outlier detection method
 
-        ax.set_title(f'{column} with Key Economic Events',
-                    fontsize=14, fontweight='bold')
-        ax.set_xlabel('Date', fontsize=12)
-        ax.set_ylabel(column, fontsize=12)
-        ax.grid(True, alpha=0.3, linestyle='--')
-        ax.legend(loc='upper left', fontsize=10)
+**Add this method after `check_missing_values`:**
 
-        plt.xticks(rotation=45)
-        plt.tight_layout()
+```python
+    def detect_outliers(self, threshold: float = 3.0) -> Dict[str, List[Tuple]]:
+        """
+        Detect outliers using z-score method (|z| > threshold).
 
-        # Save
-        save_path = self.save_dir / save_name
-        fig.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"  ✓ Saved: {save_path}")
+        Args:
+            threshold: Number of standard deviations for outlier detection
 
-        plt.close(fig)
+        Returns:
+            Dictionary with outliers per variable
+        """
+        outliers = {}
+
+        for col in self.df.columns:
+            z_scores = np.abs((self.df[col] - self.df[col].mean()) / self.df[col].std())
+            outlier_indices = z_scores[z_scores > threshold].index
+            outlier_values = [(idx.strftime('%Y-%m'), self.df.loc[idx, col])
+                             for idx in outlier_indices]
+
+            if outlier_values:
+                outliers[col] = outlier_values
+
+        self.validation_report['outliers'] = outliers
+        return outliers
 ```
 
 **Update test code:**
 
 ```python
 if __name__ == "__main__":
-    print("Testing plotter...")
-
     import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
-    loader = NigerianMacroDataLoader()
+    loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
 
-    plotter = TimeSeriesPlotter()
+    validator = DataValidator(df)
 
-    print("\n[1/5] Single series plot...")
-    plotter.plot_single_series(df, 'MPR', save_name='mpr_single.png')
+    print("\n[1/2] Checking missing values...")
+    missing = validator.check_missing_values()
+    for var, count in missing.items():
+        print(f"  {var}: {count} missing")
 
-    print("\n[2/5] All variables plot...")
-    plotter.plot_all_variables(df, save_name='all_variables.png')
-
-    print("\n[3/5] Correlation heatmap...")
-    plotter.plot_correlation_heatmap(df, save_name='correlation_heatmap.png')
-
-    print("\n[4/5] Summary statistics...")
-    plotter.print_summary_stats(df)
-
-    print("\n[5/5] Events plot...")
-    plotter.plot_with_events(df, 'ExchangeRate', save_name='exchange_rate_events.png')
-
-    print("\n✓ All tests complete!")
+    print("\n[2/2] Detecting outliers (3 sigma)...")
+    outliers = validator.detect_outliers()
+    if outliers:
+        for var, vals in outliers.items():
+            print(f"  {var}: {len(vals)} outliers detected")
+    else:
+        print("  No outliers detected")
 ```
 
 **Save and test:**
 
 ```bash
-python models/plots.py
+python src/data_ingestion/data_validator.py
 ```
-
-**You should now see the Exchange Rate plot with vertical lines marking 2016, 2020, 2023!**
 
 ---
 
-## Hour 7 (3 PM - 4 PM): Create Master Visualization Function
+## Hour 3 (11 AM - 12 PM): Add Range, Temporal & Monotonicity Checks
 
-### Step 7.1: Add comprehensive plotting method
+### Step 3.1: Add value range, temporal, and monotonicity methods
 
-**Add this method after `plot_with_events`:**
+**Add these three methods after `detect_outliers`:**
 
 ```python
-    def create_full_report(self, df: pd.DataFrame):
+    def check_value_ranges(self) -> Dict[str, Dict]:
         """
-        Generate all plots and statistics in one go.
-
-        Args:
-            df: DataFrame with macro variables
+        Check if values are within expected economic ranges.
         """
-        print("\n" + "=" * 80)
-        print("GENERATING FULL EXPLORATORY DATA ANALYSIS REPORT")
-        print("=" * 80)
+        # Expected ranges (based on Nigerian economic history)
+        expected_ranges = {
+            'MPR': (0, 50),
+            'Inflation': (-5, 100),
+            'ExchangeRate': (1, 2000),
+            'M2': (0, 1e10)
+        }
 
-        print("\n[1/6] Creating individual time series plots...")
-        for col in df.columns:
-            self.plot_single_series(df, col,
-                                   title=f'{col} (2010-2025)',
-                                   save_name=f'{col.lower()}_timeseries.png')
+        range_checks = {}
+        for col in self.df.columns:
+            if col in expected_ranges:
+                min_val, max_val = expected_ranges[col]
+                actual_min = self.df[col].min()
+                actual_max = self.df[col].max()
+                in_range = (actual_min >= min_val) and (actual_max <= max_val)
+                range_checks[col] = {
+                    'expected': expected_ranges[col],
+                    'actual': (actual_min, actual_max),
+                    'valid': in_range
+                }
 
-        print("\n[2/6] Creating combined plot...")
-        self.plot_all_variables(df, save_name='all_variables.png')
+        self.validation_report['range_checks'] = range_checks
+        return range_checks
 
-        print("\n[3/6] Creating correlation heatmap...")
-        self.plot_correlation_heatmap(df, save_name='correlation_heatmap.png')
+    def check_temporal_consistency(self) -> Dict[str, bool]:
+        """
+        Check that dates are properly ordered and no duplicates exist.
+        """
+        temporal_checks = {}
+        temporal_checks['no_duplicate_dates'] = not self.df.index.duplicated().any()
+        temporal_checks['dates_sorted'] = self.df.index.is_monotonic_increasing
+        freq = pd.infer_freq(self.df.index)
+        temporal_checks['inferred_frequency'] = freq if freq else "Irregular"
 
-        print("\n[4/6] Creating events plot for key variables...")
-        self.plot_with_events(df, 'Inflation', save_name='inflation_events.png')
-        self.plot_with_events(df, 'ExchangeRate', save_name='exchange_rate_events.png')
+        self.validation_report['temporal_consistency'] = temporal_checks
+        return temporal_checks
 
-        print("\n[5/6] Generating summary statistics...")
-        summary = self.generate_summary_stats(df)
+    def check_monotonicity(self, variables: List[str] = None) -> Dict[str, str]:
+        """
+        Check if M2 is mostly increasing (economic expectation).
+        """
+        if variables is None:
+            variables = ['M2'] if 'M2' in self.df.columns else []
 
-        # Save summary to CSV
-        summary_path = self.save_dir / 'summary_statistics.csv'
-        summary.to_csv(summary_path)
-        print(f"  ✓ Saved: {summary_path}")
+        monotonicity = {}
+        for var in variables:
+            if var not in self.df.columns:
+                continue
+            diff = self.df[var].diff()
+            increasing_pct = (diff > 0).sum() / len(diff) * 100
+            decreasing_pct = (diff < 0).sum() / len(diff) * 100
 
-        print("\n[6/6] Printing summary...")
-        self.print_summary_stats(df)
+            if increasing_pct > 80:
+                monotonicity[var] = "Mostly increasing (expected for M2)"
+            elif decreasing_pct > 80:
+                monotonicity[var] = "Mostly decreasing (unusual for M2)"
+            else:
+                monotonicity[var] = f"Mixed ({increasing_pct:.1f}% increasing)"
 
-        print("\n" + "=" * 80)
-        print("✓ FULL REPORT COMPLETE!")
-        print(f"✓ All outputs saved to: {self.save_dir}")
-        print("=" * 80)
+        self.validation_report['monotonicity'] = monotonicity
+        return monotonicity
 ```
 
-**Update the test code to use the master function:**
+**Save and test:**
+
+```bash
+python src/data_ingestion/data_validator.py
+```
+
+---
+
+## Hour 4 (12 PM - 1 PM): LUNCH BREAK
+
+Take a break! You've completed the data validator checks.
+
+---
+
+## Hour 5 (1 PM - 2 PM): Add Master Validation & Start Visualization Module
+
+### Step 5.1: Add validate_all() and get_summary() to DataValidator
+
+**Add these final methods to the class:**
 
 ```python
+    def validate_all(self) -> Dict:
+        """
+        Run all validation checks and print formatted report.
+        """
+        print("=" * 60)
+        print("DATA VALIDATION REPORT")
+        print("=" * 60)
+
+        print("\n[1/5] Checking missing values...")
+        missing = self.check_missing_values()
+        if sum(missing.values()) == 0:
+            print("  No missing values detected")
+        else:
+            for var, count in missing.items():
+                if count > 0:
+                    pct = self.validation_report['missing_values']['percentages'][var]
+                    print(f"    - {var}: {count} ({pct}%)")
+
+        print("\n[2/5] Detecting outliers (3 sigma threshold)...")
+        outliers = self.detect_outliers()
+        if not outliers:
+            print("  No significant outliers detected")
+        else:
+            for var, outlier_list in outliers.items():
+                print(f"    - {var}: {len(outlier_list)} outliers")
+                for date, value in outlier_list[:3]:
+                    print(f"      {date}: {value:.2f}")
+
+        print("\n[3/5] Checking value ranges...")
+        ranges = self.check_value_ranges()
+        for var, check in ranges.items():
+            status = "OK" if check['valid'] else "WARNING"
+            print(f"  [{status}] {var}: {check['actual'][0]:.2f} to {check['actual'][1]:.2f}")
+
+        print("\n[4/5] Checking temporal consistency...")
+        temporal = self.check_temporal_consistency()
+        for check, result in temporal.items():
+            print(f"  {check}: {result}")
+
+        print("\n[5/5] Checking monotonicity...")
+        monotonic = self.check_monotonicity()
+        for var, status in monotonic.items():
+            print(f"  - {var}: {status}")
+
+        print("\n" + "=" * 60)
+        print("VALIDATION COMPLETE")
+        print("=" * 60)
+        return self.validation_report
+
+    def get_summary(self) -> pd.DataFrame:
+        """
+        Get a summary DataFrame of key statistics.
+        """
+        summary_data = []
+        for col in self.df.columns:
+            row = {
+                'Variable': col,
+                'N_Obs': len(self.df[col]),
+                'Missing': self.df[col].isnull().sum(),
+                'Min': round(self.df[col].min(), 2),
+                'Max': round(self.df[col].max(), 2),
+                'Mean': round(self.df[col].mean(), 2),
+                'Std': round(self.df[col].std(), 2)
+            }
+            summary_data.append(row)
+        return pd.DataFrame(summary_data)
+
+
 def main():
-    """
-    Main execution: Generate full EDA report.
-    """
-    print("=" * 80)
-    print("NIGERIAN MONETARY POLICY - EXPLORATORY DATA ANALYSIS")
-    print("=" * 80)
-
-    # Load data
     import sys
-    sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
-    print("\nLoading data...")
-    loader = NigerianMacroDataLoader()
+    loader = NigerianMacroDataLoader(data_dir="data")
     df = loader.load_and_prepare()
 
-    # Create plotter
-    plotter = TimeSeriesPlotter(save_dir="results/plots")
+    validator = DataValidator(df)
+    validator.validate_all()
 
-    # Generate full report
-    plotter.create_full_report(df)
+    print("\nSummary table:")
+    print(validator.get_summary().to_string(index=False))
 
 
 if __name__ == "__main__":
     main()
 ```
 
-**Save and run:**
+**Save and run final validator test:**
 
 ```bash
-python models/plots.py
+python src/data_ingestion/data_validator.py
+```
+
+**DataValidator is complete. Now move to visualizations.**
+
+---
+
+### Step 5.2: Create visualization module — Structure & constants
+
+Create `src/visualization/plots.py` and **write this first chunk:**
+
+```python
+"""
+Visualization Module — Nigerian Monetary Policy Transmission Analysis
+
+Generates publication-quality plots for EDA and thesis presentation.
+All figures save at 300 DPI into the results/ tree.
+
+Day 2 deliverable.  Dependencies: pandas, numpy, matplotlib, seaborn.
+"""
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import seaborn as sns
+from pathlib import Path
+
+
+# ─────────────────────────────────────────────────────────────────────
+# PROJECT-WIDE CONSTANTS  (single source of truth for every plot)
+# ─────────────────────────────────────────────────────────────────────
+
+COLORS = {
+    "MPR":            "#2E86AB",
+    "Inflation":      "#A23B72",
+    "ExchangeRate":   "#F18F01",
+    "M2":             "#6A994E",
+}
+
+LABELS = {                          # (title, y-axis unit)
+    "MPR":            ("Monetary Policy Rate",         "% per annum"),
+    "Inflation":      ("Headline Inflation (CPI)",     "% YoY"),
+    "ExchangeRate":   ("Exchange Rate",                "NGN / USD"),
+    "M2":             ("Broad Money Supply (M2)",      "N Billions"),
+}
+
+# Nigerian structural-break episodes
+EVENTS = {
+    "2016-06-01": ("2016 Devaluation",    "#E74C3C"),
+    "2020-03-01": ("COVID-19",            "#E67E22"),
+    "2023-06-01": ("2023 FX Unification", "#8E44AD"),
+}
+
+
+def _style_ax(ax, title, ylabel, xlabel=None):
+    """Apply a consistent look to every Axes object."""
+    ax.set_title(title, fontsize=12, fontweight="bold", pad=10)
+    ax.set_ylabel(ylabel, fontsize=10)
+    if xlabel:
+        ax.set_xlabel(xlabel, fontsize=10)
+    ax.grid(True, alpha=0.25)
+    ax.tick_params(labelsize=9)
+
+
+class MacroPlotter:
+    """
+    Publication-quality plotting for Nigerian macro data.
+
+    Parameters
+    ----------
+    df       : pd.DataFrame  - columns MPR | ExchangeRate | M2 | Inflation
+    save_dir : str | Path    - root folder for saved images (e.g. "results")
+    """
+
+    def __init__(self, df: pd.DataFrame, save_dir: str = "results"):
+        self.df = df
+        self.save_dir = Path(save_dir)
+        self.save_dir.mkdir(parents=True, exist_ok=True)
+
+        plt.style.use("seaborn-v0_8-darkgrid")
+        plt.rcParams.update({"font.size": 11, "figure.dpi": 100})
+        print(f"Plots will be saved to: {self.save_dir}")
+
+    def _save(self, fig, filename: str):
+        path = self.save_dir / filename
+        fig.savefig(path, dpi=300, bbox_inches="tight")
+        print(f"  saved  {path}")
+
+    def _draw_events(self, ax, label_top=True):
+        """Overlay vertical lines for structural-break episodes."""
+        ymin, ymax = ax.get_ylim()
+        for date_str, (label, color) in EVENTS.items():
+            ts = pd.Timestamp(date_str)
+            if ts < self.df.index[0] or ts > self.df.index[-1]:
+                continue
+            ax.axvline(ts, color=color, linestyle="--", alpha=0.6, linewidth=1.4)
+            if label_top:
+                ax.text(
+                    ts, ymax * 0.97, label,
+                    fontsize=8, color=color, ha="center", va="top",
+                    bbox=dict(boxstyle="round,pad=0.25", fc="white", alpha=0.75),
+                )
+
+
+# Test code
+if __name__ == "__main__":
+    import sys
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+
+    loader = NigerianMacroDataLoader(data_dir="data")
+    df = loader.load_and_prepare()
+
+    plotter = MacroPlotter(df, save_dir="results")
+    print("MacroPlotter initialized successfully!")
+```
+
+**Save and test:**
+
+```bash
+python src/visualization/plots.py
+```
+
+---
+
+## Hour 6 (2 PM - 3 PM): Add Time-Series & Key-Relationship Plots
+
+### Step 6.1: Add the first four plot methods
+
+**Add these methods inside the class** (after `_draw_events`):
+
+```python
+    def plot_time_series(self) -> plt.Figure:
+        """Individual time-series panel for every variable."""
+        fig, axes = plt.subplots(4, 1, figsize=(14, 12), sharex=True)
+        fig.suptitle(
+            "Nigerian Macroeconomic Variables (2010-2025)",
+            fontsize=16, fontweight="bold", y=1.01,
+        )
+
+        for ax, col in zip(axes, self.df.columns):
+            title, ylabel = LABELS.get(col, (col, ""))
+            ax.plot(self.df.index, self.df[col],
+                    color=COLORS.get(col, "#333"), linewidth=2)
+            ax.axhline(self.df[col].mean(),
+                       color="red", linestyle="--", alpha=0.4, linewidth=1,
+                       label=f"Mean {self.df[col].mean():.1f}")
+            _style_ax(ax, title, ylabel)
+            ax.legend(loc="upper left", fontsize=9)
+            self._draw_events(ax, label_top=(ax is axes[0]))
+
+        axes[-1].set_xlabel("Date", fontsize=11)
+        fig.tight_layout()
+        self._save(fig, "time_series_levels.png")
+        return fig
+
+    def plot_mpr_vs_inflation(self) -> plt.Figure:
+        """Key-relationship overlay: MPR vs Inflation."""
+        fig, ax = plt.subplots(figsize=(14, 6))
+
+        ax.plot(self.df.index, self.df["MPR"],
+                label="Monetary Policy Rate", color=COLORS["MPR"], linewidth=2.5)
+        ax.plot(self.df.index, self.df["Inflation"],
+                label="Inflation", color=COLORS["Inflation"], linewidth=2.5)
+
+        self._draw_events(ax)
+        ax.set_title("MPR vs Inflation — Transmission Dynamics",
+                     fontsize=14, fontweight="bold")
+        ax.set_ylabel("Percent (%)", fontsize=11)
+        ax.set_xlabel("Date", fontsize=11)
+        ax.legend(loc="upper left", fontsize=11)
+        ax.grid(True, alpha=0.25)
+
+        fig.tight_layout()
+        self._save(fig, "mpr_vs_inflation.png")
+        return fig
+
+    def plot_rolling_statistics(self, window: int = 12) -> plt.Figure:
+        """12-month rolling mean +/- 1 sigma band for every variable."""
+        fig, axes = plt.subplots(4, 1, figsize=(14, 13), sharex=True)
+        fig.suptitle(f"Rolling Statistics ({window}-Month Window)",
+                     fontsize=15, fontweight="bold", y=1.01)
+
+        for ax, col in zip(axes, self.df.columns):
+            title, ylabel = LABELS.get(col, (col, ""))
+            raw  = self.df[col]
+            mean = raw.rolling(window).mean()
+            std  = raw.rolling(window).std()
+
+            ax.plot(self.df.index, raw,  color=COLORS[col], alpha=0.25, linewidth=1, label="Raw")
+            ax.plot(self.df.index, mean, color=COLORS[col], linewidth=2.5,
+                    label=f"{window}-mo mean")
+            ax.fill_between(self.df.index, mean - std, mean + std,
+                            color=COLORS[col], alpha=0.12, label="+/- 1 sigma")
+
+            _style_ax(ax, f"{title} - rolling", ylabel)
+            ax.legend(loc="upper left", fontsize=9)
+
+        axes[-1].set_xlabel("Date", fontsize=11)
+        fig.tight_layout()
+        self._save(fig, "rolling_statistics.png")
+        return fig
+
+    def plot_first_differences(self) -> plt.Figure:
+        """Month-on-month change bar chart."""
+        df_d = self.df.diff().dropna()
+        fig, axes = plt.subplots(4, 1, figsize=(14, 11), sharex=True)
+        fig.suptitle("First Differences (Month-on-Month Change)",
+                     fontsize=15, fontweight="bold", y=1.01)
+
+        for ax, col in zip(axes, df_d.columns):
+            title, ylabel = LABELS.get(col, (col, ""))
+            vals = df_d[col].values
+            colours = [COLORS.get(col, "#333") if v >= 0 else "#BDBDBD" for v in vals]
+
+            ax.bar(df_d.index, vals, width=18, color=colours, edgecolor="none")
+            ax.axhline(0, color="black", linewidth=0.7)
+            _style_ax(ax, f"Delta {title}", f"Delta {ylabel}")
+
+        axes[-1].set_xlabel("Date", fontsize=11)
+        fig.tight_layout()
+        self._save(fig, "first_differences.png")
+        return fig
+```
+
+**Update test code:**
+
+```python
+if __name__ == "__main__":
+    import sys
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+
+    loader = NigerianMacroDataLoader(data_dir="data")
+    df = loader.load_and_prepare()
+
+    plotter = MacroPlotter(df, save_dir="results")
+
+    print("\n[1/4] Time series levels...")
+    plotter.plot_time_series()
+    plt.close("all")
+
+    print("\n[2/4] MPR vs Inflation...")
+    plotter.plot_mpr_vs_inflation()
+    plt.close("all")
+
+    print("\n[3/4] Rolling statistics...")
+    plotter.plot_rolling_statistics()
+    plt.close("all")
+
+    print("\n[4/4] First differences...")
+    plotter.plot_first_differences()
+    plt.close("all")
+
+    print("\n4 plots saved!")
+```
+
+**Save and test:**
+
+```bash
+python src/visualization/plots.py
+ls results/*.png
+```
+
+---
+
+## Hour 7 (3 PM - 4 PM): Add Remaining 5 Plots
+
+### Step 7.1: Add distributions, correlation, scatter, normalised & volatility
+
+**Add these methods after `plot_first_differences`:**
+
+```python
+    def plot_distributions(self) -> plt.Figure:
+        """Histogram + mean/median lines for each variable."""
+        fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+        fig.suptitle("Variable Distributions", fontsize=15, fontweight="bold")
+
+        for idx, col in enumerate(self.df.columns):
+            ax = axes[idx // 2, idx % 2]
+            title, xlabel = LABELS.get(col, (col, ""))
+
+            ax.hist(self.df[col], bins=28, color=COLORS.get(col, "#333"),
+                    edgecolor="black", alpha=0.55, linewidth=0.6)
+
+            mn, md = self.df[col].mean(), self.df[col].median()
+            ax.axvline(mn, color="red",       linestyle="--", linewidth=1.8,
+                       label=f"Mean   {mn:.1f}")
+            ax.axvline(md, color="darkgreen", linestyle=":",  linewidth=1.8,
+                       label=f"Median {md:.1f}")
+
+            _style_ax(ax, title, "Frequency", xlabel)
+            ax.legend(fontsize=9)
+
+        fig.tight_layout()
+        self._save(fig, "distributions.png")
+        return fig
+
+    def plot_correlation_heatmap(self) -> plt.Figure:
+        """Annotated Pearson correlation matrix."""
+        corr = self.df.corr()
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.heatmap(
+            corr, annot=True, fmt=".3f", cmap="RdBu_r", center=0,
+            square=True, linewidths=1.5, vmin=-1, vmax=1,
+            cbar_kws={"shrink": 0.8},
+            annot_kws={"size": 13, "weight": "bold"},
+            ax=ax,
+        )
+        ax.set_title("Correlation Matrix", fontsize=14, fontweight="bold")
+        fig.tight_layout()
+        self._save(fig, "correlation_heatmap.png")
+        return fig
+
+    def plot_scatter_pairs(self) -> plt.Figure:
+        """Four economically-motivated scatter plots with Pearson r."""
+        pairs = [
+            ("MPR",          "Inflation",    "MPR -> Inflation (target)"),
+            ("ExchangeRate", "Inflation",    "Exchange Rate -> Inflation (pass-through)"),
+            ("MPR",          "ExchangeRate", "MPR -> Exchange Rate (interest parity)"),
+            ("M2",           "Inflation",    "M2 -> Inflation (quantity theory)"),
+        ]
+
+        fig, axes = plt.subplots(2, 2, figsize=(14, 11))
+        fig.suptitle("Key Pairwise Relationships", fontsize=15, fontweight="bold")
+
+        for ax, (x, y, title) in zip(axes.flat, pairs):
+            ax.scatter(self.df[x], self.df[y],
+                       color="#2C3E50", alpha=0.55, edgecolors="white", s=55, zorder=3)
+
+            # OLS trend line
+            coeffs = np.polyfit(self.df[x], self.df[y], 1)
+            x_line = np.linspace(self.df[x].min(), self.df[x].max(), 120)
+            ax.plot(x_line, np.polyval(coeffs, x_line),
+                    "r--", linewidth=2, alpha=0.7, zorder=2)
+
+            # Pearson r badge
+            r = self.df[x].corr(self.df[y])
+            ax.text(0.04, 0.94, f"r = {r:.3f}", transform=ax.transAxes,
+                    fontsize=11, fontweight="bold", va="top",
+                    bbox=dict(boxstyle="round", fc="wheat", alpha=0.85))
+
+            _style_ax(ax, title,
+                      LABELS.get(y, (y, ""))[0],
+                      LABELS.get(x, (x, ""))[0])
+
+        fig.tight_layout()
+        self._save(fig, "scatter_pairs.png")
+        return fig
+
+    def plot_normalised_overlay(self) -> plt.Figure:
+        """All four variables rescaled to [0, 1] — reveals relative moves."""
+        normed = (self.df - self.df.min()) / (self.df.max() - self.df.min())
+
+        fig, ax = plt.subplots(figsize=(14, 6))
+        for col in normed.columns:
+            ax.plot(normed.index, normed[col],
+                    color=COLORS[col], linewidth=1.8,
+                    label=LABELS.get(col, (col, ""))[0])
+
+        self._draw_events(ax)
+        ax.set_title("Normalised Variables (0-1 scale)",
+                     fontsize=14, fontweight="bold")
+        ax.set_ylabel("Normalised value", fontsize=11)
+        ax.set_xlabel("Date", fontsize=11)
+        ax.legend(loc="upper left", fontsize=10)
+        ax.grid(True, alpha=0.25)
+
+        fig.tight_layout()
+        self._save(fig, "normalised_overlay.png")
+        return fig
+
+    def plot_volatility(self, window: int = 12) -> plt.Figure:
+        """Rolling std of monthly % change — measures uncertainty."""
+        pct = self.df.pct_change().dropna() * 100
+        vol = pct.rolling(window).std()
+
+        fig, ax = plt.subplots(figsize=(14, 5))
+        for col in vol.columns:
+            ax.plot(vol.index, vol[col],
+                    color=COLORS[col], linewidth=1.8,
+                    label=LABELS.get(col, (col, ""))[0])
+
+        self._draw_events(ax)
+        ax.set_title(f"Rolling Volatility ({window}-Month Std Dev of Monthly % Change)",
+                     fontsize=14, fontweight="bold")
+        ax.set_ylabel("Volatility (% pts)", fontsize=11)
+        ax.set_xlabel("Date", fontsize=11)
+        ax.legend(loc="upper right", fontsize=10)
+        ax.grid(True, alpha=0.25)
+
+        fig.tight_layout()
+        self._save(fig, "volatility.png")
+        return fig
+
+    def generate_all(self):
+        """Run every plot method in sequence."""
+        print("=" * 60)
+        print("  GENERATING ALL EDA VISUALISATIONS")
+        print("=" * 60)
+
+        steps = [
+            ("1/9  Time series (levels)",   self.plot_time_series),
+            ("2/9  MPR vs Inflation",       self.plot_mpr_vs_inflation),
+            ("3/9  Rolling statistics",     self.plot_rolling_statistics),
+            ("4/9  First differences",      self.plot_first_differences),
+            ("5/9  Distributions",          self.plot_distributions),
+            ("6/9  Correlation heatmap",    self.plot_correlation_heatmap),
+            ("7/9  Scatter pairs",          self.plot_scatter_pairs),
+            ("8/9  Normalised overlay",     self.plot_normalised_overlay),
+            ("9/9  Volatility",             self.plot_volatility),
+        ]
+
+        for label, fn in steps:
+            print(f"\n  [{label}]")
+            fn()
+            plt.close("all")
+
+        print("\n" + "=" * 60)
+        print("  ALL 9 PLOTS SAVED")
+        print("=" * 60)
+
+
+def main():
+    import sys
+    sys.path.insert(0, ".")
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
+
+    loader = NigerianMacroDataLoader(data_dir="data")
+    df = loader.load_and_prepare()
+
+    plotter = MacroPlotter(df, save_dir="results")
+    plotter.generate_all()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+**Save and run the master function:**
+
+```bash
+python src/visualization/plots.py
 ```
 
 **Expected output:**
 ```
-[Loading output...]
-GENERATING FULL EXPLORATORY DATA ANALYSIS REPORT
-[1/6] Creating individual time series plots...
-  ✓ Saved: results/plots/mpr_timeseries.png
-  ✓ Saved: results/plots/exchangerate_timeseries.png
-  ✓ Saved: results/plots/m2_timeseries.png
-  ✓ Saved: results/plots/inflation_timeseries.png
-[2/6] Creating combined plot...
-  ✓ Saved: results/plots/all_variables.png
-[3/6] Creating correlation heatmap...
-  ✓ Saved: results/plots/correlation_heatmap.png
-[4/6] Creating events plot...
-  ✓ Saved: results/plots/inflation_events.png
-  ✓ Saved: results/plots/exchange_rate_events.png
-[5/6] Generating summary statistics...
-  ✓ Saved: results/plots/summary_statistics.csv
-[6/6] Printing summary...
-[Statistics output...]
-✓ FULL REPORT COMPLETE!
-```
-
-**Check your plots:**
-```bash
-ls -lh results/plots/
-# Should show ~10 PNG files + 1 CSV
-```
-
-**Excellent! Your visualization module is complete!**
-
----
-
-## Hour 8 (4 PM - 5 PM): Create Jupyter Notebook & Git Commit
-
-### Step 8.1: Create exploratory notebook
-
-Create `notebooks/day2_exploratory_analysis.ipynb`:
-
-```bash
-jupyter notebook notebooks/
-```
-
-**In the browser, create a new notebook with these cells:**
-
-**Cell 1 - Setup:**
-```python
-# Day 2: Exploratory Data Analysis
-# Nigerian Monetary Policy Transmission
-
-import sys
-sys.path.append('..')
-
-from models.data_loader import NigerianMacroDataLoader
-from models.plots import TimeSeriesPlotter
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-
-%matplotlib inline
-
-print("✓ Libraries loaded")
-```
-
-**Cell 2 - Load Data:**
-```python
-# Load processed data
-loader = NigerianMacroDataLoader(data_dir="../data")
-df = loader.load_and_prepare()
-
-print(f"✓ Loaded {len(df)} observations")
-print(f"✓ Variables: {df.columns.tolist()}")
-```
-
-**Cell 3 - Quick Summary:**
-```python
-# Display first few rows
-df.head(10)
-```
-
-**Cell 4 - Summary Statistics:**
-```python
-# Summary statistics
-plotter = TimeSeriesPlotter(save_dir="../results/plots")
-plotter.print_summary_stats(df)
-```
-
-**Cell 5 - Visualizations:**
-```python
-# Generate all plots
-plotter.create_full_report(df)
-```
-
-**Cell 6 - Correlation Analysis:**
-```python
-# Display correlation matrix
-corr = df.corr()
-print("Correlation Matrix:")
-print(corr.round(3))
-
-# Key observations
-print("\nKey Observations:")
-print(f"  • MPR vs Inflation correlation: {corr.loc['MPR', 'Inflation']:.3f}")
-print(f"  • ExchangeRate vs Inflation correlation: {corr.loc['ExchangeRate', 'Inflation']:.3f}")
-print(f"  • M2 vs Inflation correlation: {corr.loc['M2', 'Inflation']:.3f}")
-```
-
-**Save the notebook** (Ctrl+S in browser)
-
----
-
-### Step 8.2: Verify complete file
-
-Check your `plots.py` has ~180 lines:
-
-```bash
-wc -l models/plots.py
-# Should show: ~180 models/plots.py
+GENERATING ALL EDA VISUALISATIONS
+  [1/9  Time series (levels)]
+  saved  results/time_series_levels.png
+  [2/9  MPR vs Inflation]
+  saved  results/mpr_vs_inflation.png
+  ...
+  [9/9  Volatility]
+  saved  results/volatility.png
+  ALL 9 PLOTS SAVED
 ```
 
 ---
 
-### Step 8.3: Commit everything
+## Hour 8 (4 PM - 5 PM): Verify & Git Commit
+
+### Step 8.1: Verify file sizes
+
+```bash
+wc -l src/data_ingestion/data_validator.py
+# Should show: ~270 lines
+
+wc -l src/visualization/plots.py
+# Should show: ~380 lines
+
+ls -lh results/*.png
+# Should show: 9 PNG files
+```
+
+---
+
+### Step 8.2: Commit everything
 
 ```bash
 git add .
@@ -793,20 +861,22 @@ git status
 **Commit:**
 
 ```bash
-git commit -m "Day 2: Exploratory Data Analysis & Visualization
+git commit -m "Day 2: Data validation + 9 publication-quality EDA plots
 
-- Created visualization utilities (plots.py, 180 lines, built in chunks)
-- Implemented 6 plot types: single series, multi-variable, correlation, events
-- Generated full EDA report with 10+ plots
-- Created Jupyter notebook for interactive analysis
+- src/data_ingestion/data_validator.py (270 lines)
+  - check_missing_values, detect_outliers, check_value_ranges
+  - check_temporal_consistency, check_monotonicity
+  - validate_all() master pipeline
+- src/visualization/plots.py (380 lines)
+  - MacroPlotter class with 9 plot methods
+  - Structural-break annotations (2016, 2020, 2023)
+  - 300-DPI PNG output
 
-Key visualizations:
-  • Time series plots for all 4 variables
-  • Correlation heatmap (MPR-Inflation: weak negative)
-  • Events plot (2016 devaluation, 2020 COVID, 2023 FX unification)
-  • Summary statistics (181 observations, no missing values)
-
-Outputs: results/plots/ (10 PNG files + 1 CSV)
+Key findings:
+  - No missing values in dataset
+  - M2 monotonically increasing (as expected)
+  - MPR vs Inflation weak negative correlation
+  - 2016 devaluation and 2023 FX unification clearly visible
 
 https://claude.ai/code/session_019oWdezYCv1NxdFa4QYPPhs"
 ```
@@ -821,121 +891,122 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ## Final Code Summary
 
-Here's the complete `models/plots.py` file (~180 lines):
+### File 1: `src/data_ingestion/data_validator.py`
 
-**File**: `models/plots.py`
-
-**Structure**:
 ```python
-class TimeSeriesPlotter:
-    def __init__(save_dir="results/plots")
-    def plot_single_series(df, column, title, save, filename)
-    def plot_all_variables(df, save_name)
-    def plot_correlation_heatmap(df, save, filename)
-    def generate_summary_stats(df)
-    def print_summary_stats(df)
-    def plot_with_events(df, column, events, title, save, filename)
-    def create_full_report(df)
+class DataValidator:
+    def __init__(df)
+    def check_missing_values()
+    def detect_outliers(threshold=3.0)
+    def check_value_ranges()
+    def check_temporal_consistency()
+    def check_monotonicity(variables=None)
+    def validate_all()
+    def get_summary()
 
 def main()
 ```
 
-**Key capabilities**:
-- Plot individual time series with customization
-- Create 4-panel plot of all variables
-- Correlation heatmap with annotations
-- Summary statistics generation
-- Event annotation (CBN rate changes)
-- Full automated report generation
+### File 2: `src/visualization/plots.py`
 
-**Verify your file is complete:**
+```python
+# Module-level: COLORS, LABELS, EVENTS, _style_ax()
+
+class MacroPlotter:
+    def __init__(df, save_dir="results")
+    def _save(fig, filename)
+    def _draw_events(ax, label_top=True)
+    def plot_time_series()
+    def plot_mpr_vs_inflation()
+    def plot_rolling_statistics(window=12)
+    def plot_first_differences()
+    def plot_distributions()
+    def plot_correlation_heatmap()
+    def plot_scatter_pairs()
+    def plot_normalised_overlay()
+    def plot_volatility(window=12)
+    def generate_all()
+
+def main()
+```
+
+**Verify both files are complete:**
 ```bash
 python -c "
-from models.plots import TimeSeriesPlotter
-import inspect
-methods = [m for m in dir(TimeSeriesPlotter) if not m.startswith('_')]
-print('Methods:', methods)
+from src.data_ingestion.data_validator import DataValidator
+from src.visualization.plots import MacroPlotter
+print('DataValidator methods:', [m for m in dir(DataValidator) if not m.startswith('_')])
+print('MacroPlotter methods:', [m for m in dir(MacroPlotter) if not m.startswith('_')])
 "
 ```
 
 ---
 
-## End of Day 2 Checklist ✅
+## End of Day 2 Checklist
 
 Before you finish, verify:
 
+- [ ] `data_validator.py` runs without errors
 - [ ] `plots.py` runs without errors
-- [ ] You see ~10 PNG files in `results/plots/`
-- [ ] Correlation heatmap shows values (MPR vs Inflation = -0.3 to -0.5)
-- [ ] Events plot shows vertical lines at 2016, 2020, 2023
-- [ ] Jupyter notebook opens and all cells run
+- [ ] You see 9 PNG files in `results/`
+- [ ] Correlation heatmap shows MPR vs Inflation value
+- [ ] Normalised overlay shows 2016, 2020, 2023 event lines
 - [ ] Git commit successful
-- [ ] You understand each plot type created
 
-**If all boxes checked → DAY 2 COMPLETE! 🎉**
+**If all boxes checked -> DAY 2 COMPLETE!**
 
 ---
 
 ## What You Built Today
 
-**Files created:** 2 (`plots.py`, Jupyter notebook)
-**Lines of code:** ~180 (built in 6 chunks over 6 hours)
-**Plots generated:** 10 PNG files + 1 CSV
-**Skills learned:** matplotlib, seaborn, correlation analysis, event marking
+**Files created:** 2 (`data_validator.py`, `plots.py`)
+**Lines of code:** ~650
+**Plots generated:** 9 publication-ready PNG files at 300 DPI
+**Skills learned:** Data validation, matplotlib, seaborn, structural-break annotation
 
-**Key learning:** Visual inspection reveals:
-- 2016: Exchange rate spike (devaluation)
-- 2020: Inflation rise (COVID supply shocks)
-- 2023: Exchange rate jump (FX unification)
-- MPR and Inflation have weak negative correlation (surprising? Will investigate with VAR later)
+**Key insight from plots:**
+- 2016: Exchange rate spike (Naira devaluation)
+- 2020: Inflation rise (COVID-19 supply shocks)
+- 2023: Massive exchange rate jump (FX unification)
+- MPR and Inflation have weak/negative correlation (VAR will reveal the lag structure)
 
 ---
 
 ## Tomorrow (Day 3): Stationarity Testing
 
 **What you'll build:**
-- Stationarity tests module (`models/stationarity.py`)
-- ADF, PP, KPSS tests
-- Integration order classification (I(0) vs I(1))
+- `src/econometrics/stationarity_tests.py`
+- ADF + Phillips-Perron + KPSS tests on levels AND first differences
+- Integration order classification: I(0) vs I(1) for each variable
 
 **New package to install:**
 ```bash
 pip install statsmodels==0.14.1 scipy==1.11.4
 ```
 
-**Time:** 8 hours
-**Difficulty:** Same as Days 1-2
-
 ---
 
 ## Troubleshooting
 
-**"Matplotlib not showing plots in Jupyter"**
-```python
-# Add this to first cell:
-%matplotlib inline
+**"seaborn-v0_8-darkgrid style not found"**
+```bash
+# Check matplotlib version
+python -c "import matplotlib; print(matplotlib.__version__)"
+# If older, replace 'seaborn-v0_8-darkgrid' with 'seaborn-darkgrid'
 ```
 
-**"Plots look ugly"**
+**"Plots not saving"**
 ```python
-# Increase DPI in your plots.py:
-plt.rcParams['figure.dpi'] = 150
+# Ensure results/ directory exists
+import os
+os.makedirs("results", exist_ok=True)
 ```
 
-**"Events not showing on plot"**
-```python
-# Check your data covers those dates:
-print(df.index.min(), df.index.max())
-# Should span 2010-01 to 2025-01
-```
-
-**"Correlation heatmap values look wrong"**
-```python
-# Verify data loaded correctly:
-print(df.describe())
-# All variables should have non-zero std dev
+**"ImportError for seaborn"**
+```bash
+pip install seaborn --upgrade
 ```
 
 ---
 
-**Excellent work! See you tomorrow for Day 3! 💪**
+**Well done! See you tomorrow for Day 3!**

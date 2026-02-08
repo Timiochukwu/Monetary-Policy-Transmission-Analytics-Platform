@@ -324,13 +324,13 @@ elif page == "VAR Analysis":
             with st.spinner("Running VAR analysis..."):
                 try:
                     # Import models (add to top of file)
-                    from models.var_model import VARAnalyzer
+                    from src.econometrics.var_model import VARModel
 
                     # Difference data
                     df_diff = df[selected_vars].diff().dropna()
 
                     # Estimate VAR
-                    var_analyzer = VARAnalyzer(
+                    var_analyzer = VARModel(
                         df_diff,
                         ordering=selected_vars,
                         save_dir='results/var_dashboard'
@@ -396,7 +396,7 @@ Add IRF plotting to VAR Analysis page:
             irf_periods = st.slider("IRF horizon:", 1, 24, 12)
 
             if st.button("Compute IRF"):
-                from models.irf import IRFAnalyzer
+                from src.econometrics.irf import IRFAnalyzer
 
                 irf_analyzer = IRFAnalyzer(var_results, selected_vars, 'results/irf_dashboard')
                 irf_analyzer.compute_irf(periods=irf_periods)
@@ -433,7 +433,7 @@ Add FEVD section inside the `"VAR Analysis"` page block, after the IRF section:
             focus_var = st.selectbox("Focus variable:", selected_vars)
 
             if st.button("Compute FEVD"):
-                from models.fevd import FEVDAnalyzer
+                from src.econometrics.fevd import FEVDAnalyzer
 
                 fevd_analyzer = FEVDAnalyzer(var_results, selected_vars, 'results/fevd_dashboard')
                 fevd_analyzer.compute_fevd(periods=fevd_periods)

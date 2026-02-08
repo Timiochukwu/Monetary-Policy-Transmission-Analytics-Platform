@@ -16,9 +16,9 @@ Today we build **`policy_simulation.py`** - a module that simulates **counterfac
 - Code to simulate policy shocks
 - Comparison of actual vs. simulated paths
 - Quantification of policy impact
-- Complete `models/policy_simulation.py` (~320 lines)
+- Complete `src/econometrics/policy_simulation.py` (~320 lines)
 
-**File we're building**: `models/policy_simulation.py`
+**File we're building**: `src/econometrics/policy_simulation.py`
 
 ---
 
@@ -53,17 +53,17 @@ Today we build **`policy_simulation.py`** - a module that simulates **counterfac
 Open terminal in project root:
 
 ```bash
-cd models
+cd src/econometrics
 touch policy_simulation.py
 ```
 
-Open `models/policy_simulation.py` in your editor.
+Open `src/econometrics/policy_simulation.py` in your editor.
 
 ---
 
 ### Step 2: Build basic structure (Hour 1)
 
-Write this code in `models/policy_simulation.py`:
+Write this code in `src/econometrics/policy_simulation.py`:
 
 ```python
 """
@@ -135,9 +135,9 @@ Create `test_day9_hour1.py` in project root:
 ```python
 """Test Hour 1: Basic PolicySimulator structure"""
 
-from models.policy_simulation import PolicySimulator
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.policy_simulation import PolicySimulator
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -146,7 +146,7 @@ df = loader.run_pipeline()
 # Fit VAR (on differenced data)
 df_diff = df.diff().dropna()
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize PolicySimulator (pass original data, not differenced)
@@ -411,9 +411,9 @@ Create `test_day9_hour2.py`:
 ```python
 """Test Hour 2: Simulate single shock"""
 
-from models.policy_simulation import PolicySimulator
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.policy_simulation import PolicySimulator
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -421,7 +421,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize simulator
@@ -634,9 +634,9 @@ Create `test_day9_hour3.py`:
 ```python
 """Test Hour 3: Plot simulation results"""
 
-from models.policy_simulation import PolicySimulator
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.policy_simulation import PolicySimulator
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -644,7 +644,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize simulator and run simulation
@@ -827,9 +827,9 @@ Create `test_day9_hour5.py`:
 ```python
 """Test Hour 5: Compare multiple scenarios"""
 
-from models.policy_simulation import PolicySimulator
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.policy_simulation import PolicySimulator
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -837,7 +837,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize simulator
@@ -1030,9 +1030,9 @@ Create `test_day9_hour6.py`:
 ```python
 """Test Hour 6: Historical counterfactual"""
 
-from models.policy_simulation import PolicySimulator
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.policy_simulation import PolicySimulator
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -1040,7 +1040,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize simulator
@@ -1181,9 +1181,9 @@ Create `test_day9_hour7.py`:
 ```python
 """Test Hour 7: Policy rule simulation"""
 
-from models.policy_simulation import PolicySimulator
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.policy_simulation import PolicySimulator
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -1191,7 +1191,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize simulator
@@ -1358,9 +1358,9 @@ Create `test_day9_final.py`:
 ```python
 """Test final: Complete policy simulation analysis"""
 
-from models.policy_simulation import PolicySimulator
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.policy_simulation import PolicySimulator
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 print("Loading data and fitting VAR...")
@@ -1369,7 +1369,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Run full policy analysis
@@ -1474,9 +1474,9 @@ Results saved to: results/simulations
 
 ## Final Code Summary
 
-Here's the complete `models/policy_simulation.py` file (~320 lines):
+Here's the complete `src/econometrics/policy_simulation.py` file (~320 lines):
 
-**File**: `models/policy_simulation.py`
+**File**: `src/econometrics/policy_simulation.py`
 
 **Structure**:
 ```python
@@ -1526,7 +1526,7 @@ class PolicySimulator:
 ## Files Created Today
 
 ```
-models/
+src/econometrics/
   policy_simulation.py      [NEW] ~320 lines
 
 results/
@@ -1544,7 +1544,7 @@ results/
 
 **Topic**: Historical Decomposition
 
-**What we'll build**: `models/historical_decomposition.py`
+**What we'll build**: `src/econometrics/historical_decomposition.py`
 
 **What it does**: Decompose actual historical data into contributions from each shock.
 
@@ -1556,7 +1556,7 @@ results/
 
 **Issue 1**: `ImportError: cannot import name 'PolicySimulator'`
 - **Cause**: File not saved
-- **Fix**: Ensure `models/policy_simulation.py` exists
+- **Fix**: Ensure `src/econometrics/policy_simulation.py` exists
 
 **Issue 2**: Simulation dates don't match data
 - **Cause**: Shock date not in data index
@@ -1576,7 +1576,7 @@ results/
 
 ```python
 # Initialize
-from models.policy_simulation import PolicySimulator
+from src.econometrics.policy_simulation import PolicySimulator
 simulator = PolicySimulator(var_results, data, variable_names, save_dir)
 
 # Single shock

@@ -10,7 +10,7 @@
 
 By 5 PM today, you will have:
 
-- ✅ ARDL bounds testing module (`models/ardl.py` - 300 lines)
+- ✅ ARDL bounds testing module (`src/econometrics/ardl.py` - 300 lines)
 - ✅ Grid search over lag combinations
 - ✅ Pesaran et al. (2001) bounds test
 - ✅ Long-run and short-run coefficients
@@ -56,7 +56,7 @@ Where:
 
 ### Step 1.2: Create ARDL module - Basic structure
 
-Create `models/ardl.py` and **write this first chunk:**
+Create `src/econometrics/ardl.py` and **write this first chunk:**
 
 ```python
 """
@@ -77,7 +77,7 @@ from statsmodels.tsa.ardl import ARDL, ardl_select_order
 from statsmodels.stats.stattools import durbin_watson
 
 
-class ARDLBoundsTester:
+class ARDLBoundsTest:
     """
     ARDL bounds test for cointegration with mixed integration orders.
     """
@@ -98,14 +98,14 @@ class ARDLBoundsTester:
 # Test code
 if __name__ == "__main__":
     print("Testing ARDL module initialization...")
-    tester = ARDLBoundsTester()
+    tester = ARDLBoundsTest()
     print("✓ Module initialized successfully!")
 ```
 
 **Save and test:**
 
 ```bash
-python models/ardl.py
+python src/econometrics/ardl.py
 ```
 
 **Expected output:**
@@ -165,12 +165,12 @@ if __name__ == "__main__":
     # Load data
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
-    tester = ARDLBoundsTester()
+    tester = ARDLBoundsTest()
 
     # Set up ARDL: Inflation ~ MPR + ExchangeRate + M2
     endog = df['Inflation']
@@ -185,7 +185,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python models/ardl.py
+python src/econometrics/ardl.py
 ```
 
 ---
@@ -259,12 +259,12 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
-    tester = ARDLBoundsTester()
+    tester = ARDLBoundsTest()
 
     endog = df['Inflation']
     exog = df[['MPR', 'ExchangeRate', 'M2']]
@@ -282,7 +282,7 @@ if __name__ == "__main__":
 **Save and test:**
 
 ```bash
-python models/ardl.py
+python src/econometrics/ardl.py
 ```
 
 ---
@@ -558,14 +558,14 @@ def main():
     # Load data
     import sys
     sys.path.append('.')
-    from models.data_loader import NigerianMacroDataLoader
+    from src.data_ingestion.data_loader import NigerianMacroDataLoader
 
     print("\nLoading data...")
     loader = NigerianMacroDataLoader()
     df = loader.load_and_prepare()
 
     # ARDL specification: Inflation ~ MPR + ExchangeRate + M2
-    tester = ARDLBoundsTester(save_dir="results/ardl")
+    tester = ARDLBoundsTest(save_dir="results/ardl")
     results = tester.run_full_analysis(
         df=df,
         dependent_var='Inflation',
@@ -583,7 +583,7 @@ if __name__ == "__main__":
 **Save and run final test:**
 
 ```bash
-python models/ardl.py
+python src/econometrics/ardl.py
 ```
 
 ---
@@ -593,7 +593,7 @@ python models/ardl.py
 ### Step 8.1: Verify file completeness
 
 ```bash
-wc -l models/ardl.py
+wc -l src/econometrics/ardl.py
 # Should show: ~300 lines
 ```
 
@@ -659,13 +659,13 @@ git push -u origin claude/monetary-policy-analytics-platform-03tRK
 
 ## Final Code Summary
 
-Here's the complete `models/ardl.py` file (~320 lines):
+Here's the complete `src/econometrics/ardl.py` file (~320 lines):
 
-**File**: `models/ardl.py`
+**File**: `src/econometrics/ardl.py`
 
 **Structure**:
 ```python
-class ARDLBoundsTester:
+class ARDLBoundsTest:
     def __init__(save_dir="results/ardl")
     def select_lags(endog, exog, max_lags)
     def estimate_ardl(endog, exog, p, q)
@@ -690,9 +690,9 @@ def main()
 **Verify your file is complete:**
 ```bash
 python -c "
-from models.ardl import ARDLBoundsTester
+from src.econometrics.ardl import ARDLBoundsTest
 import inspect
-methods = [m for m in dir(ARDLBoundsTester) if not m.startswith('_')]
+methods = [m for m in dir(ARDLBoundsTest) if not m.startswith('_')]
 print('Methods:', methods)
 "
 ```

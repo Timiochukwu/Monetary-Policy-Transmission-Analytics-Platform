@@ -16,9 +16,9 @@ Today we build **`svar.py`** - a module for **Structural VAR (SVAR)** models wit
 - Recursive (Cholesky) identification implemented
 - Sign restrictions for structural shocks
 - Short-run and long-run restrictions
-- Complete `models/svar.py` (~350 lines)
+- Complete `src/econometrics/svar.py` (~350 lines)
 
-**File we're building**: `models/svar.py`
+**File we're building**: `src/econometrics/svar.py`
 
 ---
 
@@ -69,17 +69,17 @@ Today we build **`svar.py`** - a module for **Structural VAR (SVAR)** models wit
 ### Step 1: Create file
 
 ```bash
-cd models
+cd src/econometrics
 touch svar.py
 ```
 
-Open `models/svar.py` in your editor.
+Open `src/econometrics/svar.py` in your editor.
 
 ---
 
 ### Step 2: Build basic structure (Hour 1)
 
-Write this code in `models/svar.py`:
+Write this code in `src/econometrics/svar.py`:
 
 ```python
 """
@@ -159,9 +159,9 @@ Create `test_day11_hour1.py`:
 ```python
 """Test Hour 1: Basic SVAR structure"""
 
-from models.svar import SVARModel
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.svar import SVARModel
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -169,7 +169,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize SVAR
@@ -311,9 +311,9 @@ Create `test_day11_hour2.py`:
 ```python
 """Test Hour 2: Recursive identification"""
 
-from models.svar import SVARModel
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.svar import SVARModel
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -321,7 +321,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize and identify SVAR
@@ -510,9 +510,9 @@ Create `test_day11_hour3.py`:
 ```python
 """Test Hour 3: Structural IRFs"""
 
-from models.svar import SVARModel
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.svar import SVARModel
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -520,7 +520,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Identify SVAR
@@ -773,9 +773,9 @@ Create `test_day11_hour5.py`:
 ```python
 """Test Hour 5: Sign restrictions"""
 
-from models.svar import SVARModel
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.svar import SVARModel
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -783,7 +783,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize SVAR
@@ -1002,9 +1002,9 @@ Create `test_day11_hour6.py`:
 ```python
 """Test Hour 6: Compare identifications"""
 
-from models.svar import SVARModel
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.svar import SVARModel
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -1012,7 +1012,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Initialize SVAR
@@ -1169,9 +1169,9 @@ Create `test_day11_hour7.py`:
 ```python
 """Test Hour 7: Structural historical decomposition"""
 
-from models.svar import SVARModel
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.svar import SVARModel
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 loader = DataLoader(data_dir='data')
@@ -1179,7 +1179,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Identify SVAR
@@ -1351,9 +1351,9 @@ Create `test_day11_final.py`:
 ```python
 """Test final: Complete SVAR analysis"""
 
-from models.svar import SVARModel
-from models.var_model import VARAnalyzer
-from data.data_loader import DataLoader
+from src.econometrics.svar import SVARModel
+from src.econometrics.var_model import VARModel
+from src.data_ingestion.data_loader import DataLoader
 
 # Load data and fit VAR
 print("Loading data and fitting VAR...")
@@ -1362,7 +1362,7 @@ df = loader.run_pipeline()
 df_diff = df.diff().dropna()
 
 ordering = ['MPR', 'ExchangeRate', 'M2', 'Inflation']
-var_analyzer = VARAnalyzer(df_diff, ordering=ordering, save_dir='results/var')
+var_analyzer = VARModel(df_diff, ordering=ordering, save_dir='results/var')
 var_results = var_analyzer.fit(lags=2)
 
 # Run SVAR analysis with recursive identification
@@ -1464,7 +1464,7 @@ Results saved to: results/svar/recursive
 
 ## Final Code Summary
 
-**File**: `models/svar.py` (~350 lines)
+**File**: `src/econometrics/svar.py` (~350 lines)
 
 **Structure**:
 ```python
@@ -1513,7 +1513,7 @@ class SVARModel:
 ## Files Created Today
 
 ```
-models/
+src/econometrics/
   svar.py                           [NEW] ~350 lines
 
 results/
@@ -1531,7 +1531,7 @@ results/
 
 **Topic**: Robustness Checks
 
-**What we'll build**: `models/robustness.py`
+**What we'll build**: `src/econometrics/robustness_checks.py`
 
 **What it does**:
 - Rolling window estimation
@@ -1545,7 +1545,7 @@ results/
 
 **Issue 1**: `ImportError: cannot import name 'SVARModel'`
 - **Cause**: File not saved
-- **Fix**: Ensure `models/svar.py` exists
+- **Fix**: Ensure `src/econometrics/svar.py` exists
 
 **Issue 2**: Cholesky decomposition fails
 - **Cause**: Residual covariance not positive definite
@@ -1565,7 +1565,7 @@ results/
 
 ```python
 # Initialize
-from models.svar import SVARModel
+from src.econometrics.svar import SVARModel
 svar = SVARModel(var_results, variable_names, save_dir)
 
 # Recursive identification

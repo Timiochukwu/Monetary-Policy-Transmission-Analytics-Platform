@@ -69,7 +69,7 @@ import sys
 # Add parent directory
 sys.path.append(str(Path(__file__).parent.parent))
 
-from data.data_loader import DataLoader
+from src.data_ingestion.data_loader import DataLoader
 
 class TestDataLoader:
     """Test suite for DataLoader"""
@@ -143,7 +143,7 @@ class TestDataLoader:
 pytest tests/ -v
 
 # Run with coverage
-pytest tests/ --cov=models --cov=data --cov-report=html
+pytest tests/ --cov=src --cov-report=html
 ```
 
 **Expected output**:
@@ -171,7 +171,7 @@ Unit tests for VAR Model
 import pytest
 import pandas as pd
 import numpy as np
-from models.var_model import VARAnalyzer
+from src.econometrics.var_model import VARModel
 
 class TestVARModel:
     """Test suite for VAR models"""
@@ -191,7 +191,7 @@ class TestVARModel:
 
     def test_var_initialization(self, sample_data):
         """Test VAR analyzer initialization"""
-        analyzer = VARAnalyzer(
+        analyzer = VARModel(
             sample_data,
             ordering=['MPR', 'Inflation', 'ExchangeRate', 'M2'],
             save_dir='results/test_var'
@@ -200,7 +200,7 @@ class TestVARModel:
 
     def test_var_estimation(self, sample_data):
         """Test VAR model estimation"""
-        analyzer = VARAnalyzer(
+        analyzer = VARModel(
             sample_data,
             ordering=['MPR', 'Inflation', 'ExchangeRate', 'M2'],
             save_dir='results/test_var'
@@ -215,7 +215,7 @@ class TestVARModel:
 
     def test_granger_causality(self, sample_data):
         """Test Granger causality tests"""
-        analyzer = VARAnalyzer(
+        analyzer = VARModel(
             sample_data,
             ordering=['MPR', 'Inflation', 'ExchangeRate', 'M2'],
             save_dir='results/test_var'
@@ -293,8 +293,8 @@ Place CSV file in `data/` directory with columns:
 ### 2. Run Analysis
 
 \```python
-from data.data_loader import DataLoader
-from models.var_model import VARAnalyzer
+from src.data_ingestion.data_loader import DataLoader
+from src.econometrics.var_model import VARModel
 
 # Load data
 loader = DataLoader(data_dir='data')
@@ -302,7 +302,7 @@ df = loader.run_pipeline()
 
 # Estimate VAR
 df_diff = df.diff().dropna()
-var_analyzer = VARAnalyzer(df_diff, list(df.columns), 'results/var')
+var_analyzer = VARModel(df_diff, list(df.columns), 'results/var')
 var_results = var_analyzer.fit(lags=2)
 \```
 
@@ -345,7 +345,7 @@ See `docs/guides/` for step-by-step tutorials:
 pytest tests/ -v
 
 # With coverage
-pytest tests/ --cov=models --cov=data --cov-report=html
+pytest tests/ --cov=src --cov-report=html
 \```
 
 ## 📊 Project Structure
@@ -353,10 +353,12 @@ pytest tests/ --cov=models --cov=data --cov-report=html
 \```
 Monetary-Policy-Analytics/
 ├── data/                  # Data files
-├── models/                # Python modules
-│   ├── data_loader.py
-│   ├── var_model.py
-│   ├── irf.py
+├── src/                   # Python source modules
+│   ├── data_ingestion/
+│   │   └── data_loader.py
+│   ├── econometrics/
+│   │   ├── var_model.py
+│   │   ├── irf.py
 │   ├── fevd.py
 │   └── ...
 ├── dashboard/             # Streamlit dashboard
@@ -525,8 +527,8 @@ I address these through robustness checks and sensitivity analysis.
 - Understand every line you wrote
 
 ### Key Files to Review
-- `models/var_model.py`: Core VAR implementation
-- `models/irf.py`: IRF computation
+- `src/econometrics/var_model.py`: Core VAR implementation
+- `src/econometrics/irf.py`: IRF computation
 - `scripts/generate_report.py`: Report generation
 
 ### Commands to Remember
@@ -793,10 +795,15 @@ class TestVARModel:
 
 **Complete project file listing** (all 15 days):
 ```
-models/
-  __init__.py
-  data_loader.py        # Day 1
-  plots.py              # Day 2
+src/
+  data_ingestion/
+    __init__.py
+    data_loader.py        # Day 1
+  visualization/
+    __init__.py
+    plots.py              # Day 2
+  econometrics/
+    __init__.py
   stationarity.py       # Day 3
   cointegration.py      # Day 4
   ardl.py               # Day 5
@@ -844,10 +851,10 @@ setup.py
 python -c "
 import os
 required_files = [
-    'models/data_loader.py', 'models/plots.py', 'models/stationarity.py',
-    'models/cointegration.py', 'models/ardl.py', 'models/var_model.py',
-    'models/irf.py', 'models/fevd.py', 'models/policy_simulation.py',
-    'models/historical_decomp.py', 'models/svar.py', 'models/robustness.py',
+    'src/data_ingestion/data_loader.py', 'models/plots.py', 'src/econometrics/stationarity_tests.py',
+    'src/econometrics/cointegration_tests.py', 'src/econometrics/ardl.py', 'src/econometrics/var_model.py',
+    'src/econometrics/irf.py', 'src/econometrics/fevd.py', 'src/econometrics/policy_simulation.py',
+    'models/historical_decomp.py', 'src/econometrics/svar.py', 'src/econometrics/robustness_checks.py',
     'dashboard/app.py', 'scripts/generate_report.py',
     'tests/test_data_loader.py', 'tests/test_var_model.py'
 ]

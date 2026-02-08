@@ -83,7 +83,11 @@ Copy and paste this entire block:
 mkdir -p data/raw
 mkdir -p data/processed
 mkdir -p data/sample
-mkdir -p models
+mkdir -p data/metadata
+mkdir -p src/data_ingestion
+mkdir -p src/econometrics
+mkdir -p src/visualization
+mkdir -p src/utils
 mkdir -p scripts
 mkdir -p tests
 mkdir -p dashboard
@@ -98,7 +102,6 @@ mkdir -p results/irf
 mkdir -p results/fevd
 mkdir -p results/simulations
 mkdir -p results/historical_decomp
-mkdir -p results/svar
 mkdir -p results/vecm
 mkdir -p results/robustness
 mkdir -p notebooks
@@ -122,16 +125,22 @@ These make Python recognize folders as packages:
 
 ```bash
 # Create __init__.py in all Python package folders
-touch models/__init__.py
+touch src/__init__.py
+touch src/data_ingestion/__init__.py
+touch src/econometrics/__init__.py
+touch src/visualization/__init__.py
+touch src/utils/__init__.py
 touch tests/__init__.py
 touch scripts/__init__.py
 touch dashboard/__init__.py
 
 # Verify
-ls models/__init__.py tests/__init__.py scripts/__init__.py dashboard/__init__.py
+ls src/__init__.py src/data_ingestion/__init__.py src/econometrics/__init__.py
+ls src/visualization/__init__.py src/utils/__init__.py
+ls tests/__init__.py scripts/__init__.py dashboard/__init__.py
 ```
 
-**Expected**: All four files should exist (even if empty)
+**Expected**: All eight files should exist (even if empty)
 
 ---
 
@@ -361,13 +370,17 @@ pip install -r requirements.txt
 ## Project Structure
 
 ```
-├── data/           # Data files
-├── models/         # Python modules
-├── scripts/        # Utility scripts
-├── tests/          # Unit tests
-├── dashboard/      # Streamlit dashboard
-├── results/        # Output files
-└── docs/          # Documentation
+├── data/                   # Data files (raw, processed, sample)
+├── src/                    # Python source modules
+│   ├── data_ingestion/     # Data loading and validation
+│   ├── econometrics/       # All econometric analyses
+│   ├── visualization/      # Plotting and charts
+│   └── utils/              # Shared configuration
+├── scripts/                # Utility scripts
+├── tests/                  # Unit tests
+├── dashboard/              # Streamlit dashboard
+├── results/                # Output files (plots, CSVs, reports)
+└── docs/                   # Documentation and guides
 ```
 
 ## Documentation
@@ -698,30 +711,33 @@ Create `PROJECT_CHECKLIST.md`:
 ## 📋 After Each Day (Days 1-15):
 
 ### Week 1
-- [ ] Day 1: `models/data_loader.py` created
-- [ ] Day 2: `models/plots.py` created
-- [ ] Day 3: `models/stationarity.py` created
-- [ ] Day 4: `models/cointegration.py` created
-- [ ] Day 5: `models/ardl.py` created
+- [ ] Day 1: `src/data_ingestion/data_loader.py` created
+- [ ] Day 2: `src/data_ingestion/data_validator.py` + `src/visualization/plots.py` created
+- [ ] Day 3: `src/econometrics/stationarity_tests.py` created
+- [ ] Day 4: `src/econometrics/cointegration_tests.py` created
+- [ ] Day 5: `src/econometrics/ardl.py` created
 
 ### Week 2
-- [ ] Day 6: `models/var_model.py` created
-- [ ] Day 7: `models/irf.py` created
-- [ ] Day 8: `models/fevd.py` created
-- [ ] Day 9: `models/policy_simulation.py` created
-- [ ] Day 10: `models/historical_decomposition.py` created
+- [ ] Day 6: `src/econometrics/var_model.py` created
+- [ ] Day 7: `src/econometrics/irf.py` created
+- [ ] Day 8: `src/econometrics/fevd.py` created
+- [ ] Day 9: `src/econometrics/historical_decomposition.py` created
+- [ ] Day 10: `src/econometrics/policy_simulation.py` created
 
 ### Week 3
-- [ ] Day 11: `models/svar.py` created
-- [ ] Day 12: `models/robustness.py` created
+- [ ] Day 11: `src/econometrics/stability_tests.py` created
+- [ ] Day 12: `src/econometrics/robustness_checks.py` + `src/econometrics/forecast_evaluation.py` created
 - [ ] Day 13: `dashboard/app.py` created
-- [ ] Day 14: `scripts/generate_report.py` created
+- [ ] Day 14: `src/econometrics/week1_report.py` + `src/econometrics/week2_master_report.py` created
 - [ ] Day 15: `tests/test_*.py` files created, README updated
 
 ## ✅ Final Project Should Have:
 
 ### Total Files Count
-- **12 Python modules** in `models/`
+- **2 modules** in `src/data_ingestion/` (data_loader, data_validator)
+- **10+ modules** in `src/econometrics/` (stationarity, cointegration, ardl, var, irf, fevd, etc.)
+- **1 module** in `src/visualization/` (plots)
+- **1 module** in `src/utils/` (config)
 - **2 scripts** in `scripts/`
 - **1 dashboard app** in `dashboard/`
 - **5+ test files** in `tests/`
@@ -779,8 +795,16 @@ Monetary-Policy-Transmission-Analytics-Platform/
 │   └── sample/                    ✅
 │       └── sample_data.csv        ✅
 │
-├── models/                        ✅
-│   └── __init__.py                ✅
+├── src/                           ✅
+│   ├── __init__.py                ✅
+│   ├── data_ingestion/            ✅
+│   │   └── __init__.py            ✅
+│   ├── econometrics/              ✅
+│   │   └── __init__.py            ✅
+│   ├── visualization/             ✅
+│   │   └── __init__.py            ✅
+│   └── utils/                     ✅
+│       └── __init__.py            ✅
 │
 ├── scripts/                       ✅
 │   └── __init__.py                ✅
@@ -795,21 +819,24 @@ Monetary-Policy-Transmission-Analytics-Platform/
 │   ├── plots/                     ✅
 │   ├── tables/                    ✅
 │   ├── reports/                   ✅
+│   ├── stationarity/              ✅
+│   ├── cointegration/             ✅
+│   ├── ardl/                      ✅
 │   ├── var/                       ✅
 │   ├── irf/                       ✅
 │   ├── fevd/                      ✅
 │   ├── simulations/               ✅
 │   ├── historical_decomp/         ✅
-│   ├── svar/                      ✅
+│   ├── vecm/                      ✅
 │   └── robustness/                ✅
 │
 ├── notebooks/                     ✅
 │
 └── docs/                          ✅
     └── guides/                    ✅
-        ├── week1/                 ✅ (from previous work)
-        ├── week2/                 ✅ (from previous work)
-        └── week3/                 ✅ (from previous work)
+        ├── week1/                 ✅ (Days 1-5)
+        ├── week2/                 ✅ (Days 6-10)
+        └── week3/                 ✅ (Days 11-15)
 ```
 
 ---
@@ -826,7 +853,7 @@ Everything is set up. Starting tomorrow (Day 1), you'll begin writing actual cod
 5. ✅ Git initialized
 6. ✅ Configuration files in place
 
-**Next**: Proceed to `docs/guides/week1/day1.md` and start building `models/data_loader.py`!
+**Next**: Proceed to `docs/guides/week1/day1.md` and start building `src/data_ingestion/data_loader.py`!
 
 ---
 

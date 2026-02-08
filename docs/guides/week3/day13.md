@@ -420,9 +420,188 @@ Add IRF plotting to VAR Analysis page:
                 st.plotly_chart(fig, use_container_width=True)
 ```
 
-### Hour 6: FEVD Visualization
-### Hour 7: Robustness Page
-### Hour 8: Export & Final Touches
+### Hour 6 (2:00 PM - 3:00 PM): FEVD Visualization
+
+Add FEVD section inside the `"VAR Analysis"` page block, after the IRF section:
+
+```python
+        # FEVD visualization
+        if analysis_type == "Forecast Error Variance Decomposition (FEVD)":
+            st.subheader("Forecast Error Variance Decomposition")
+
+            fevd_periods = st.slider("FEVD horizon (periods):", 1, 24, 12)
+            focus_var = st.selectbox("Focus variable:", selected_vars)
+
+            if st.button("Compute FEVD"):
+                from models.fevd import FEVDAnalyzer
+
+                fevd_analyzer = FEVDAnalyzer(var_results, selected_vars, 'results/fevd_dashboard')
+                fevd_analyzer.compute_fevd(periods=fevd_periods)
+                fevd_df = fevd_analyzer.get_fevd(focus_var)
+
+                # Stacked bar chart
+                fig = go.Figure()
+                for shock_var in selected_vars:
+                    fig.add_trace(go.Bar(
+                        name=shock_var,
+                        x=list(range(1, fevd_periods + 1)),
+                        y=fevd_df[shock_var].values * 100
+                    ))
+                fig.update_layout(
+                    barmode='stack',
+                    title=f"FEVD: {focus_var} forecast error decomposition",
+                    xaxis_title="Horizon (months)",
+                    yaxis_title="Contribution (%)"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+                st.subheader("FEVD Table")
+                st.dataframe((fevd_df * 100).round(2))
+```
+
+**Also update the `analysis_type` selectbox** to include FEVD option. Find your existing selectbox and add the new option:
+
+```python
+            analysis_type = st.selectbox(
+                "Analysis type:",
+                ["Impulse Response Functions", "Forecast Error Variance Decomposition (FEVD)"]
+            )
+```
+
+---
+
+### Hour 7 (3:00 PM - 4:00 PM): Robustness Page
+
+Replace the empty `elif page == "Robustness":` block with:
+
+```python
+elif page == "Robustness":
+    st.header("Robustness Checks")
+
+    if 'var_results' not in st.session_state:
+        st.warning("Please run VAR analysis first (go to VAR Analysis page)")
+    else:
+        var_results = st.session_state['var_results']
+        selected_vars = st.session_state['selected_vars']
+
+        # --- Stability check ---
+        st.subheader("1. Model Stability (Eigenvalue Test)")
+
+        roots = var_results.roots
+        max_root = max(abs(roots))
+
+        if max_root < 1:
+            st.success(f"✓ Model is STABLE (max eigenvalue modulus: {max_root:.4f} < 1.0)")
+        else:
+            st.error(f"✗ Model is UNSTABLE (max eigenvalue modulus: {max_root:.4f} ≥ 1.0)")
+
+        # Eigenvalue plot
+        theta = np.linspace(0, 2 * np.pi, 100)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=np.cos(theta), y=np.sin(theta),
+            mode='lines', name='Unit circle',
+            line=dict(color='red', dash='dash')
+        ))
+        fig.add_trace(go.Scatter(
+            x=roots.real, y=roots.imag,
+            mode='markers', name='Eigenvalues',
+            marker=dict(size=10, color='blue', symbol='x')
+        ))
+        fig.update_layout(
+            title="Eigenvalue Stability Plot (all must be inside unit circle)",
+            xaxis_title="Real part", yaxis_title="Imaginary part",
+            xaxis=dict(range=[-1.5, 1.5]), yaxis=dict(range=[-1.5, 1.5])
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        # --- Lag sensitivity ---
+        st.subheader("2. Lag Sensitivity")
+        st.write("Check if results change significantly with different lag lengths")
+
+        test_lags = st.multiselect(
+            "Test with these lag lengths:",
+            [1, 2, 3, 4, 6],
+            default=[1, 2, 3]
+        )
+
+        if st.button("Run Lag Sensitivity Test") and test_lags:
+            sensitivity_results = []
+            df = st.session_state['df']
+
+            for lag in test_lags:
+                try:
+                    from statsmodels.tsa.vector_ar.var_model import VAR
+                    var_test = VAR(df[selected_vars].diff().dropna())
+                    result_test = var_test.fit(lag)
+                    sensitivity_results.append({
+                        'Lags': lag,
+                        'AIC': round(result_test.aic, 2),
+                        'BIC': round(result_test.bic, 2),
+                        'Max Eigenvalue': round(max(abs(result_test.roots)), 4),
+                        'Stable': 'Yes' if max(abs(result_test.roots)) < 1 else 'No'
+                    })
+                except Exception as e:
+                    sensitivity_results.append({'Lags': lag, 'Error': str(e)})
+
+            st.dataframe(pd.DataFrame(sensitivity_results))
+```
+
+---
+
+### Hour 8 (4:00 PM - 5:00 PM): Export & Final Touches
+
+**Step 8.1**: Add export buttons at the bottom of the VAR Analysis page (after the analysis sections):
+
+```python
+        # --- Export section ---
+        st.subheader("Export Results")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("Export VAR Coefficients"):
+                params_csv = pd.DataFrame(
+                    var_results.params
+                ).to_csv().encode('utf-8')
+                st.download_button(
+                    label="Download VAR Coefficients CSV",
+                    data=params_csv,
+                    file_name="var_coefficients.csv",
+                    mime="text/csv"
+                )
+
+        with col2:
+            if st.button("Export Data"):
+                data_csv = st.session_state['df'].to_csv().encode('utf-8')
+                st.download_button(
+                    label="Download Analysis Data CSV",
+                    data=data_csv,
+                    file_name="analysis_data.csv",
+                    mime="text/csv"
+                )
+```
+
+**Step 8.2**: Also store session state when VAR is run (add these lines right after `var_results = var_model.fit(lags=opt_lag)`):
+
+```python
+                st.session_state['var_results'] = var_results
+                st.session_state['selected_vars'] = selected_vars
+                st.session_state['df'] = df
+```
+
+**Step 8.3**: Test the complete dashboard:
+
+```bash
+cd /path/to/project
+streamlit run dashboard/app.py
+```
+
+Walk through each page:
+1. **Home** - should show welcome message
+2. **Data Upload** - upload `data/raw/nigeria_macro_data.csv`
+3. **VAR Analysis** - run VAR, view IRF and FEVD
+4. **Robustness** - check stability, run lag sensitivity
+5. **About** - project info
 
 ---
 

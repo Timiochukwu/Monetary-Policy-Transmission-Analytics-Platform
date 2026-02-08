@@ -315,9 +315,13 @@ Add this to `PolicySimulator` class:
 
 ---
 
-### Step 5: Add simplified simulation using built-in forecast
+### Step 5: Replace with improved simulation using built-in forecast
 
-Actually, let's use statsmodels' built-in forecast method. Replace the `simulate_shock()` method with this simpler version:
+> **⚠️ IMPORTANT**: Delete the entire `simulate_shock()` method you wrote in Step 4 above.
+> Then add this improved version in its place. Do NOT keep both — they have the same name
+> and Python will use only the last one defined, causing confusion.
+
+Use statsmodels' built-in forecast method instead:
 
 ```python
     def simulate_shock(self, shock_date: str, shock_variable: str,

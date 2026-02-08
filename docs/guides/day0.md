@@ -90,6 +90,9 @@ mkdir -p dashboard
 mkdir -p results/plots
 mkdir -p results/tables
 mkdir -p results/reports
+mkdir -p results/stationarity
+mkdir -p results/cointegration
+mkdir -p results/ardl
 mkdir -p results/var
 mkdir -p results/irf
 mkdir -p results/fevd

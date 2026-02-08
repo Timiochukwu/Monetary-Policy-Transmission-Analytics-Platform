@@ -665,7 +665,7 @@ Here's the complete `models/ardl.py` file (~320 lines):
 
 **Structure**:
 ```python
-class ARDLAnalyzer:
+class ARDLBoundsTester:
     def __init__(save_dir="results/ardl")
     def select_lags(endog, exog, max_lags)
     def estimate_ardl(endog, exog, p, q)
@@ -690,9 +690,9 @@ def main()
 **Verify your file is complete:**
 ```bash
 python -c "
-from models.ardl import ARDLAnalyzer
+from models.ardl import ARDLBoundsTester
 import inspect
-methods = [m for m in dir(ARDLAnalyzer) if not m.startswith('_')]
+methods = [m for m in dir(ARDLBoundsTester) if not m.startswith('_')]
 print('Methods:', methods)
 "
 ```
